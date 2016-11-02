@@ -3,7 +3,6 @@
 #import "UI/UnityView.h"
 #import "UI/UnityViewControllerBase.h"
 #import "ReplayKit+LiveViewController.h"
-#import "ScreenRecorder.h"
 
 @interface ReplayKitLiveAppController : UnityAppController
 
@@ -23,9 +22,6 @@
     // 把根视图和控制器全部换成我们自定义的内容。
     //_rootController = viewController;
     _rootView = _unityView;
-    
-    //[[ScreenRecorder Instance] Init];
-    //[[ScreenRecorder Instance] Start:YES];
 }
 
 @end
