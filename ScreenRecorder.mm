@@ -1,20 +1,4 @@
-#import <Foundation/Foundation.h>
-#import <ReplayKit/ReplayKit.h>
-
-@interface ScreenRecorder : NSObject<RPScreenRecorderDelegate, RPPreviewViewControllerDelegate> {
-}
-+ (ScreenRecorder*)Instance;
-- (void)Init;
-- (BOOL)Start:(BOOL)enableMicrophone;
-- (BOOL)Stop;
-- (BOOL)Discard;
-- (BOOL)Preview;
-- (int)GetState;
-- (NSString*)GetLastError;
-- (void)screenRecorderDidChangeAvailability:(RPScreenRecorder*)screenRecorder;
-- (void)screenRecorder:(RPScreenRecorder*)screenRecorder didStopRecordingWithError:(NSError*)error previewViewController:(RPPreviewViewController*)previewViewController;
-- (void)previewController:(RPPreviewViewController*)previewController didFinishWithActivityTypes:(NSSet<NSString*>*)activityTypes;
-@end
+#import "ScreenRecorder.h"
 
 const int STATE_ERROR = -1;
 const int STATE_UNINIT = 0;
@@ -46,10 +30,13 @@ static ScreenRecorder* _instance = nil;
 }
 
 - (void)Init {
-    if([RPScreenRecorder sharedRecorder] != nil && [RPScreenRecorder sharedRecorder].available) {
+    if([RPScreenRecorder sharedRecorder] != nil && [RPScreenRecorder sharedRecorder].available)
+    {
         [[RPScreenRecorder sharedRecorder] setDelegate:self];
-        [[RPScreenRecorder sharedRecorder] startRecordingWithMicrophoneEnabled:YES handler:^(NSError* error) {
-            if(error == nil) {
+        [[RPScreenRecorder sharedRecorder] startRecordingWithMicrophoneEnabled:YES handler:^(NSError* error)
+        {
+            if(error == nil)
+            {
                 [[RPScreenRecorder sharedRecorder] stopRecordingWithHandler:^(RPPreviewViewController* previewViewController, NSError* error) {
                     state = STATE_READY;
                 }];
@@ -150,7 +137,7 @@ extern "C" {
     void ScreenRecorderInit() {
         [[ScreenRecorder Instance] Init];
     }
-    bool ScreenRecorderStart(BOOL enableMicrophone) {
+    bool ScreenRecorderStart(bool enableMicrophone) {
         return [[ScreenRecorder Instance] Start:enableMicrophone];
     }
     bool ScreenRecorderStop() {
