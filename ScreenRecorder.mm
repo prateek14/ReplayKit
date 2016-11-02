@@ -94,7 +94,7 @@ static ScreenRecorder* _instance = nil;
             if(previewViewController != nil) {
                 state = STATE_READY;
                 pvc = previewViewController;
-                [pvc retain];
+                //[pvc retain];
             }
             else {
                 state = STATE_ERROR;
@@ -113,7 +113,7 @@ static ScreenRecorder* _instance = nil;
     if(state != STATE_READY) return NO;
     if([RPScreenRecorder sharedRecorder] == nil || ![RPScreenRecorder sharedRecorder].available) return NO;
     if(pvc == nil) return NO;
-    [pvc release];
+    //[pvc release];
     pvc = nil;
     [[RPScreenRecorder sharedRecorder] discardRecordingWithHandler:^(){}];
     return YES;
@@ -126,7 +126,7 @@ static ScreenRecorder* _instance = nil;
     state = STATE_PREVIEWING;
     [pvc setPreviewControllerDelegate:self];
     [[[UnityGetGLView() window] rootViewController] presentViewController:pvc animated:YES completion:^(){
-        [pvc release];
+        //[pvc release];
         pvc = nil;
     }];
     return YES;
