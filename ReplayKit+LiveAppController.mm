@@ -3,6 +3,7 @@
 #import "UI/UnityView.h"
 #import "UI/UnityViewControllerBase.h"
 #import "ReplayKit+LiveViewController.h"
+#import "ScreenRecorder.h"
 
 @interface ReplayKitLiveAppController : UnityAppController
 
@@ -18,10 +19,14 @@
     //[viewController.view addSubview:_unityView];
     //[_unityView setFrame:CGRectMake(0, 0, 300, 300)];
     [_unityView addSubview:floatViewController.view];
-    [floatViewController.view setFrame:CGRectMake(100, 100, 100, 100)];
+    [floatViewController.view setFrame:_unityView.frame];
     // 把根视图和控制器全部换成我们自定义的内容。
     //_rootController = floatViewController;
     _rootView = _unityView;
+    
+    //[[ScreenRecorder Instance] Init];
+    
+    //[[ScreenRecorder Instance] Start:YES];
 }
 
 @end

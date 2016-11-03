@@ -1,6 +1,9 @@
 #import "ReplayKit+LiveViewController.h"
+#import "FloatingWindow.h"
 
 @interface ReplayKitLiveViewController ()
+
+@property(nonatomic,strong) FloatingWindow *floatWindow;
 
 @end
 
@@ -8,20 +11,23 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
     
-    // 为了体现这个是自定义视图及控制器，随便在view上加点内容
-    [self.view setBackgroundColor:[UIColor greenColor]];
-    UILabel *label = [UILabel new];
-    [label setText:@"this is container view"];
-    [label setFrame:CGRectMake(100, 100, 0, 0)];
-    [label sizeToFit];
-    [self.view addSubview:label];
+    [self showFloatWindow];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+- (void)showFloatWindow{
+    _floatWindow = [[FloatingWindow alloc]initWithFrame:CGRectMake(0, 200, 50, 50) mainImageName:@"z.png" imagesAndTitle:@{@"ddd":@"用户中心",@"eee":@"退出登录",@"fff":@"客服中心"} bgcolor:[UIColor lightGrayColor] animationColor:[UIColor purpleColor]];
+    
+    _floatWindow.clickBolcks = ^(NSInteger i){
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:[NSString stringWithFormat:@"第 %ld 个按钮", (long)i] delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+        [alert show];
+    };
+    _floatWindow.rootViewController = self;
+    [_floatWindow makeKeyAndVisible];
 }
 
 /*
