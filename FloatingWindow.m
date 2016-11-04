@@ -96,7 +96,7 @@
             [_mainImageButton addTarget:self action:@selector(mainBtnTouchDown) forControlEvents:UIControlEventTouchDown];
         }
          */
-        _mainImageButton.tag = 0;
+        _mainImageButton.tag = FloatingButton_Live;
         [_mainImageButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         
         [self addSubview:_mainImageButton];
@@ -123,7 +123,7 @@
 }
 
 - (void)setButtons{
-    int i = 1;
+    int i = FloatingButton_Live + 1;
     for (NSString *key in _imagesAndTitle) {
         UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
         [button setFrame: CGRectMake(self.frameWidth * i , 0, self.frameWidth , self.frameWidth )];

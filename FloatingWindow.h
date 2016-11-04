@@ -1,8 +1,18 @@
 #import <UIKit/UIKit.h>
 
+
 @interface FloatingWindow : UIWindow
 
-@property (nonatomic,copy) void(^clickBolcks)(NSInteger i);
+typedef enum
+{
+    FloatingButton_Live = 0,
+    FloatingButton_Pause = FloatingButton_Live + 1,
+    FloatingButton_Micphone = FloatingButton_Live + 2,
+    FloatingButton_Webcam = FloatingButton_Live + 3,
+    FloatingButton_Stop = FloatingButton_Live + 4,
+} FloatingButtonIndex;
+
+@property (nonatomic,copy) void(^clickBolcks)(FloatingButtonIndex i);
 
 + (UIImage *)getImageFromBundle:(NSString *)imgName;
 + (UIImage *)getImageFromBundle:(NSString *)imgName ext:(NSString*)extName;
