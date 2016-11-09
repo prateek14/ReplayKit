@@ -6,13 +6,13 @@
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 
-#define animateDuration 0.3       //位置改变动画时间
-#define showDuration 0.1          //展开动画时间
-#define statusChangeDuration  3.0    //状态改变时间
-#define normalAlpha  0.8           //正常状态时背景alpha值
-#define sleepAlpha  0.3           //隐藏到边缘时的背景alpha值
-#define myBorderWidth 1.0         //外框宽度
-#define marginWith  5             //间隔
+#define animateDuration 0.3         //位置改变动画时间
+#define showDuration 0.1            //展开动画时间
+#define statusChangeDuration  3.0   //状态改变时间
+#define normalAlpha  0.8            //正常状态时背景alpha值
+#define sleepAlpha  0.3             //隐藏到边缘时的背景alpha值
+#define myBorderWidth 1.0           //外框宽度
+#define margin  5                   //间隔
 #define liveButtonFixWidth 15
 #define liveButtonFixHeight 10
 
@@ -92,7 +92,7 @@
         _liveButton.tag = FloatingButton_Live;
         [_liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         CGFloat buttonSize = _liveButton.frame.size.width;
-        _contentView = [[UIView alloc] initWithFrame:(CGRect){marginWith, liveButtonFixHeight / 2, buttonSize + 4 * (frame.size.width - liveButtonFixWidth + marginWith) - marginWith, buttonSize - liveButtonFixWidth}];
+        _contentView = [[UIView alloc] initWithFrame:(CGRect){margin, liveButtonFixHeight / 2, buttonSize + 4 * (frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize - liveButtonFixWidth}];
         _contentView.alpha  = 0;
         [self addSubview:_contentView];
         //添加按钮
@@ -160,9 +160,9 @@
     self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
     [self.pauseButton setFrame: CGRectMake(startPosX, 0, width, width)];
-    [self.micButton setFrame: CGRectMake(startPosX + width + marginWith, 0, width, width)];
-    [self.cameraButton setFrame: CGRectMake(startPosX + (width + marginWith) * 2, 0, width, width)];
-    [self.stopButton setFrame: CGRectMake(startPosX + (width + marginWith) * 3, 0, width, width)];
+    [self.micButton setFrame: CGRectMake(startPosX + width + margin, 0, width, width)];
+    [self.cameraButton setFrame: CGRectMake(startPosX + (width + margin) * 2, 0, width, width)];
+    [self.stopButton setFrame: CGRectMake(startPosX + (width + margin) * 3, 0, width, width)];
     
     [self.cameraButton setImage:[FloatingWindow getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
     [self.micButton setImage:[FloatingWindow getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
@@ -284,8 +284,8 @@
     else if(p.state == UIGestureRecognizerStateEnded)
     {
         //[self stopAnimation];
-        //[self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
-        NSLog(@"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", self.center.x, self.center.y, self.frame.origin.x, self.frame.origin.y, self.frame.size.width, self.frame.size.height, _contentView.center.x, _contentView.center.y,_contentView.frame.origin.x, _contentView.frame.origin.y, _contentView.frame.size.width, _contentView.frame.size.height);
+        [self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
+        [self fixedBound];
         /*
         if(panPoint.x <= kScreenWidth/2)
         {
@@ -539,31 +539,43 @@
  */
 - (void)fixedBound
 {
-    CGFloat size = self.frame.size.width;
-    CGFloat left = size / 2 + marginWith;
-    CGFloat right = kScreenWidth - (size / 2 + marginWith);
-    CGFloat top = left;
-    CGFloat bottom = kScreenHeight - (size / 2 + marginWith);
+    CGFloat width = self.frame.size.width;
+    CGFloat height = self.frame.size.height;
+    CGFloat left = width / 2 + margin;
+    CGFloat right = kScreenWidth - (width / 2 + margin);
+    CGFloat top = height / 2 + margin;
+    CGFloat bottom = kScreenHeight - (height / 2 + margin);
     if (self.center.x < left) {
-        self.center = CGPointMake(left, self.center.y);
+        [UIView animateWithDuration:animateDuration animations:^{
+            self.center = CGPointMake(left, self.center.y);
+        }];
     }else if (self.center.x > right) {
-        self.center = CGPointMake(right, self.center.y);
+        [UIView animateWithDuration:animateDuration animations:^{
+            self.center = CGPointMake(right, self.center.y);
+        }];
     }
     if (self.center.y < top) {
-        self.center = CGPointMake(self.center.x, top);
+        [UIView animateWithDuration:animateDuration animations:^{
+            self.center = CGPointMake(self.center.x, top);
+        }];
     }else if (self.center.y > bottom) {
-        self.center = CGPointMake(self.center.x, bottom);
+        [UIView animateWithDuration:animateDuration animations:^{
+            self.center = CGPointMake(self.center.x, bottom);
+        }];
     }
+    NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
 }
 - (void)onCloseTab
 {
-    self.isShowTab = NO;
     [self fixedBound];
+    if(!self.isShowTab)
+        return;
+    self.isShowTab = NO;
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha  = 0;
         CGFloat height = self.frame.size.height;
         if (self.frame.origin.x + self.liveButton.frame.origin.x <= kScreenWidth/2) {
-            //self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
+            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, height, height);
         }else{
             self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
             self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
@@ -577,12 +589,14 @@
 //    }
     [self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
     CGRect rect = self.frame;
-    NSLog(@"%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
+    NSLog(@"onCloseTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 - (void)onOpenTab
 {
-    self.isShowTab = YES;
     [self fixedBound];
+    if(self.isShowTab)
+        return;
+    self.isShowTab = YES;
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha  = 1;
         CGFloat height = self.frame.size.height;
@@ -592,8 +606,8 @@
         }else{
             CGFloat width = self.frame.size.width;
             [self moveContentviewLeft];
-            self.liveButton.frame = CGRectMake((4 * (width + marginWith)), 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
-            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + marginWith + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
+            self.liveButton.frame = CGRectMake((4 * (width + margin)), 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
+            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
         }
     }];
 //    // pan手势
@@ -603,7 +617,7 @@
 //    }
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
     CGRect rect = self.frame;
-    NSLog(@"%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
+    NSLog(@"onOpenTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 #pragma mark  ------- button事件 ---------
 - (void)itemsClick:(id)sender{
