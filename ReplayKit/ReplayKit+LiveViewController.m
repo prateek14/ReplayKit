@@ -2,13 +2,13 @@
 #import "ReplayKitLiveViewModel.h"
 #import "ReplayKitLiveView.h"
 #import "WebKit/WebKit.h"
-#import "FloatingWindow.h"
+#import "ReplayKitLiveView.h"
 
 @interface ReplayKitLiveViewController()
 
 @property (strong, nonatomic) ReplayKitLiveViewModel *liveVM;
 @property (nonatomic) IBOutlet ReplayKitLiveView *liveVMController;
-@property (nonatomic) IBOutlet FloatingWindow *floatWindow;
+@property (nonatomic) IBOutlet ReplayKitLiveView *floatWindow;
 @property (nonatomic, weak) UIView *cameraPreview;
 
 @property (nonatomic, copy) NSURL *chatURL;
@@ -31,17 +31,8 @@
 }
 - (void)showFloatWindow{
     self.liveVM = [[ReplayKitLiveViewModel alloc] initWithViewController:self];
-    
-    //self.liveVMController = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(0, 0, 50, 50) bgcolor:[UIColor lightGrayColor] animationColor:[UIColor purpleColor]];
-    
-    //[self.liveVMController bindVM:_liveVM];
-    
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
-    
-    //self.liveVMController.rootViewController = self;
-    //[self.liveVMController makeKeyAndVisible];
-    
-    _floatWindow = [[FloatingWindow alloc]initWithFrame:CGRectMake(0, 100, 70, 70) mainImageName:@"zzz" imagesAndTitle:@{@"ddd":@"用户中心",@"eee":@"退出登录",@"fff":@"客服中心"} bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    _floatWindow = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(0, 100, 70, 70) mainImageName:@"zzz" imagesAndTitle:@{@"ddd":@"用户中心",@"eee":@"退出登录",@"fff":@"客服中心"} bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     [_floatWindow setupVMObserver:_liveVM];
     _liveVM.microphoneEnabled = YES;
     _liveVM.cameraEnabled = YES;

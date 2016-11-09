@@ -3,9 +3,9 @@
 
 #define CheckStartTimeout 5
 
-@interface ReplayKitLiveViewModel()<RPBroadcastActivityViewControllerDelegate, RPBroadcastControllerDelegate> {
+@interface ReplayKitLiveViewModel()<RPBroadcastActivityViewControllerDelegate, RPBroadcastControllerDelegate>
+{
 }
-
 @property (weak, nonatomic) UIViewController *ownerViewController;
 @property (weak, nonatomic) RPBroadcastController *broadcastController;
 @property (strong, nonatomic) RPBroadcastController *strongBC;  // 暂停的时候强引用
@@ -16,6 +16,7 @@
 @property (weak, nonatomic) NSTimer *startCheckTimer;
 @end
 
+
 @implementation ReplayKitLiveViewModel
 
 - (instancetype)initWithViewController:(UIViewController *)vc
@@ -23,8 +24,6 @@
     self = [super init];
     if (self) {
         _ownerViewController = vc;
-        //[JCDeallocMonitor addMonitorToObj:self];
-        
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(checkLivingStatus)
                                                      name:UIApplicationDidBecomeActiveNotification
@@ -33,7 +32,6 @@
                                                  selector:@selector(checkLivingStatus)
                                                      name:UIApplicationWillEnterForegroundNotification
                                                    object:[UIApplication sharedApplication]];
-        
     }
     return self;
 }
