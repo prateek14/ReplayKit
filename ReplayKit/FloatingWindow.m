@@ -13,6 +13,9 @@
 #define sleepAlpha  0.3           //隐藏到边缘时的背景alpha值
 #define myBorderWidth 1.0         //外框宽度
 #define marginWith  5             //间隔
+#define liveButtonFixWidth 15
+#define liveButtonFixHeight 10
+
 
 #define WZFlashInnerCircleInitialRaius  20
 
@@ -26,7 +29,6 @@
 @property (strong, nonatomic) UIButton *cameraButton;
 @property (strong, nonatomic) UIButton *stopButton;
 
-@property(nonatomic)NSInteger frameWidth;
 @property(nonatomic)BOOL  isShowTab;
 @property(nonatomic,strong)UIPanGestureRecognizer *pan;
 @property(nonatomic,strong)UITapGestureRecognizer *tap;
@@ -34,6 +36,8 @@
 @property(nonatomic,strong)CAAnimationGroup *animationGroup;
 @property(nonatomic,strong)CAShapeLayer *circleShape;
 @property(nonatomic,strong)UIColor *animationColor;
+@property(nonatomic)CGPoint startPanOffset;
+
 
 @end
 
@@ -46,7 +50,7 @@
 + (UIImage *)getImageFromBundle:(NSString *)imgName ext:(NSString*)extName
 {
     NSString *path = [[ NSBundle mainBundle] pathForResource: @ "image" ofType:@ "bundle"];
-    NSLog(@"%@", path);
+    //NSLog(@"%@", path);
     NSBundle *bundle = [NSBundle bundleWithPath:path];
     NSString *img_path = [bundle pathForResource:imgName ofType:extName];
     return [UIImage imageWithContentsOfFile:img_path];
@@ -76,33 +80,24 @@
 
         self.backgroundColor = [UIColor clearColor];
         self.windowLevel = UIWindowLevelAlert;  //如果想在 alert 之上，则改成 + 2
-        //self.rootViewController = [UIViewController new];
-        //[self makeKeyAndVisible];
         
         _bgcolor = bgcolor;
-        _frameWidth = frame.size.width;
+        //self.backgroundColor = _bgcolor;
         _animationColor = animationColor;
         
-        _contentView = [[UIView alloc] initWithFrame:(CGRect){_frameWidth ,0,imagesAndTitle.count * (_frameWidth + 5),_frameWidth}];
+        _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
+        UIImage *image = [FloatingWindow getImageFromBundle:@"live_off"];
+        [_liveButton setFrame:(CGRect){0, 0, frame.size.width, frame.size.height - (liveButtonFixWidth - liveButtonFixHeight)}];
+        [_liveButton setImage:image forState:UIControlStateNormal];
+        _liveButton.tag = FloatingButton_Live;
+        [_liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
+        CGFloat buttonSize = _liveButton.frame.size.width;
+        _contentView = [[UIView alloc] initWithFrame:(CGRect){marginWith, liveButtonFixHeight / 2, buttonSize + 4 * (frame.size.width - liveButtonFixWidth + marginWith) - marginWith, buttonSize - liveButtonFixWidth}];
         _contentView.alpha  = 0;
         [self addSubview:_contentView];
         //添加按钮
         [self setButtons];
-        
-        _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
-        [_liveButton setFrame:(CGRect){0, 0,frame.size.width, frame.size.height}];
-        UIImage *image = [ImageLoader imageNamed:@"live_off"];//[FloatingWindow getImageFromBundle:mainImageName];
-        NSLog(@"%@-%@", mainImageName, image);
-        [_liveButton setImage:image forState:UIControlStateNormal];
-        //_liveButton.alpha = sleepAlpha;
-        //[_liveButton addTarget:self action:@selector(click:) forControlEvents:UIControlEventTouchUpInside];
-        //if (_animationColor) {
-        //    [_liveButton addTarget:self action:@selector(mainBtnTouchDown) forControlEvents:UIControlEventTouchDown];
-        //}
-        _liveButton.tag = FloatingButton_Live;
-        [_liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:_liveButton];
-
         //[self doBorderWidth:myBorderWidth color:nil cornerRadius:_frameWidth/2];
         
         _pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(locationChange:)];
@@ -150,20 +145,29 @@
         i++;
     };
      */
+    CGFloat width = self.frame.size.width - liveButtonFixWidth;
+    CGFloat height = self.frame.size.width - liveButtonFixHeight;
+    UIImage* image = [FloatingWindow getImageFromBundle:@"live_adorn"];
+    image = [image stretchableImageWithLeftCapWidth:image.size.width * 0.35 topCapHeight:image.size.height * 0.5];
+    UIImageView *bgIamge = [[UIImageView alloc] initWithImage:image];
+    [bgIamge setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
+    [self.contentView addSubview:bgIamge];
+    
+    CGFloat startPosX = _liveButton.frame.size.width;
     self.pauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.micButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.cameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
-    [self.pauseButton setFrame: CGRectMake(0, 0, self.frameWidth , self.frameWidth )];
-    [self.micButton setFrame: CGRectMake(self.frameWidth * 1, 0, self.frameWidth , self.frameWidth )];
-    [self.cameraButton setFrame: CGRectMake(self.frameWidth * 2, 0, self.frameWidth , self.frameWidth )];
-    [self.stopButton setFrame: CGRectMake(self.frameWidth * 3, 0, self.frameWidth , self.frameWidth )];
+    [self.pauseButton setFrame: CGRectMake(startPosX, 0, width, width)];
+    [self.micButton setFrame: CGRectMake(startPosX + width + marginWith, 0, width, width)];
+    [self.cameraButton setFrame: CGRectMake(startPosX + (width + marginWith) * 2, 0, width, width)];
+    [self.stopButton setFrame: CGRectMake(startPosX + (width + marginWith) * 3, 0, width, width)];
     
-    [self.cameraButton setImage:[ImageLoader imageNamed:@"camera_off"] forState:UIControlStateNormal];
-    [self.micButton setImage:[ImageLoader imageNamed:@"mic_off"] forState:UIControlStateNormal];
-    [self.pauseButton setImage:[ImageLoader imageNamed:@"pause"] forState:UIControlStateNormal];
-    [self.stopButton setImage:[ImageLoader imageNamed:@"stop"] forState:UIControlStateNormal];
+    [self.cameraButton setImage:[FloatingWindow getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
+    [self.micButton setImage:[FloatingWindow getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
+    [self.pauseButton setImage:[FloatingWindow getImageFromBundle:@"live_pause"] forState:UIControlStateNormal];
+    [self.stopButton setImage:[FloatingWindow getImageFromBundle:@"live_stop"] forState:UIControlStateNormal];
     
     self.pauseButton.tag = FloatingButton_Pause;
     self.micButton.tag = FloatingButton_Micphone;
@@ -183,45 +187,43 @@
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    UIImage* image = [ImageLoader imageNamed:@"camera_on"];
-    NSLog(@"%@", image);
     if([keyPath isEqualToString:@"cameraEnabled"])
     {
         if (self.liveVM.isCameraEnabled) {
-            [self.cameraButton setImage:[ImageLoader imageNamed:@"camera_on"] forState:UIControlStateNormal];
+            [self.cameraButton setImage:[FloatingWindow getImageFromBundle:@"live_camera_off"] forState:UIControlStateNormal];
         }
         else {
-            [self.cameraButton setImage:[ImageLoader imageNamed:@"camera_off"] forState:UIControlStateNormal];
+            [self.cameraButton setImage:[FloatingWindow getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"microphoneEnabled"])
     {
         if (self.liveVM.isMicrophoneEnabled) {
-            [self.micButton setImage:[ImageLoader imageNamed:@"mic_on"] forState:UIControlStateNormal];
+            [self.micButton setImage:[FloatingWindow getImageFromBundle:@"live_microphone_off"] forState:UIControlStateNormal];
         }
         else {
-            [self.micButton setImage:[ImageLoader imageNamed:@"mic_off"] forState:UIControlStateNormal];
+            [self.micButton setImage:[FloatingWindow getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"living"])
     {
         if (self.liveVM.isLiving) {
-            UIImage *liveImage = [UIImage animatedImageNamed:@"living" duration:1];
+            UIImage *liveImage = [FloatingWindow getImageFromBundle:@"live_on"];
             [self.liveButton setImage:liveImage forState:UIControlStateNormal];
             [self onOpenTab];
         }
         else {
-            [self.liveButton setImage:[ImageLoader imageNamed:@"live_off"] forState:UIControlStateNormal];
+            [self.liveButton setImage:[FloatingWindow getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
             [self onCloseTab];
         }
     }
     else if([keyPath isEqualToString:@"paused"])
     {
         if (self.liveVM.isPaused) {
-            [self.pauseButton setImage:[ImageLoader imageNamed:@"resume"] forState:UIControlStateNormal];
+            [self.pauseButton setImage:[FloatingWindow getImageFromBundle:@"live_play"] forState:UIControlStateNormal];
         }
         else {
-            [self.pauseButton setImage:[ImageLoader imageNamed:@"pause"] forState:UIControlStateNormal];
+            [self.pauseButton setImage:[FloatingWindow getImageFromBundle:@"live_pause"] forState:UIControlStateNormal];
         }
     }
 }
@@ -237,15 +239,15 @@
 #pragma mark ------- contentview 操作 --------------------
 //按钮在屏幕右边时，左移contentview
 - (void)moveContentviewLeft{
-    _contentView.frame = (CGRect){self.frameWidth/3, 0 ,_contentView.frame.size.width,_contentView.frame.size.height};
+    //_contentView.frame = (CGRect){self.frameWidth/2 - marginWith, 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
 }
 
 //按钮在屏幕左边时，contentview恢复默认
 - (void)resetContentview{
-    _contentView.frame = (CGRect){self.frameWidth + marginWith,0,_contentView.frame.size.width,_contentView.frame.size.height};
+    //_contentView.frame = (CGRect){marginWith , 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
 }
 
-
+/*
 #pragma mark  ------- 绘图操作 ----------
 - (void)drawRect:(CGRect)rect {
     [self drawDash];
@@ -264,7 +266,7 @@
     }
     CGContextStrokePath(context);
 }
-
+*/
 //改变位置
 - (void)locationChange:(UIPanGestureRecognizer*)p
 {
@@ -272,16 +274,18 @@
     if(p.state == UIGestureRecognizerStateBegan)
     {
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
-        //_liveButton.alpha = normalAlpha;
+        self.startPanOffset = CGPointMake(panPoint.x - self.center.x, panPoint.y - self.center.y);
     }
     if(p.state == UIGestureRecognizerStateChanged)
     {
-        self.center = CGPointMake(panPoint.x, panPoint.y);
+        self.center = CGPointMake(panPoint.x - self.startPanOffset.x
+                                  , panPoint.y - self.startPanOffset.y);
     }
     else if(p.state == UIGestureRecognizerStateEnded)
     {
         //[self stopAnimation];
-        [self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
+        //[self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
+        NSLog(@"%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", self.center.x, self.center.y, self.frame.origin.x, self.frame.origin.y, self.frame.size.width, self.frame.size.height, _contentView.center.x, _contentView.center.y,_contentView.frame.origin.x, _contentView.frame.origin.y, _contentView.frame.size.width, _contentView.frame.size.height);
         /*
         if(panPoint.x <= kScreenWidth/2)
         {
@@ -339,7 +343,7 @@
                 }];
             }
         }
-         */
+        */
     }
 }
 //点击事件
@@ -423,9 +427,6 @@
 
 - (void)changeStatus
 {
-    //[UIView animateWithDuration:1.0 animations:^{
-    //    _liveButton.alpha = sleepAlpha;
-    //}];
     [UIView animateWithDuration:0.5 animations:^{
         CGFloat x = self.center.x < 20+WIDTH/2 ? 0 :  self.center.x > kScreenWidth - 20 -WIDTH/2 ? kScreenWidth : self.center.x;
         CGFloat y = self.center.y < 40 + HEIGHT/2 ? 0 : self.center.y > kScreenHeight - 40 - HEIGHT/2 ? kScreenHeight : self.center.y;
@@ -536,94 +537,84 @@
     return [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius].CGPath;
  }
  */
+- (void)fixedBound
+{
+    CGFloat size = self.frame.size.width;
+    CGFloat left = size / 2 + marginWith;
+    CGFloat right = kScreenWidth - (size / 2 + marginWith);
+    CGFloat top = left;
+    CGFloat bottom = kScreenHeight - (size / 2 + marginWith);
+    if (self.center.x < left) {
+        self.center = CGPointMake(left, self.center.y);
+    }else if (self.center.x > right) {
+        self.center = CGPointMake(right, self.center.y);
+    }
+    if (self.center.y < top) {
+        self.center = CGPointMake(self.center.x, top);
+    }else if (self.center.y > bottom) {
+        self.center = CGPointMake(self.center.x, bottom);
+    }
+}
 - (void)onCloseTab
 {
     self.isShowTab = NO;
-    
-    if (self.center.x == 0) {
-        self.center = CGPointMake(WIDTH/2, self.center.y);
-    }else if (self.center.x == kScreenWidth) {
-        self.center = CGPointMake(kScreenWidth - WIDTH/2, self.center.y);
-    }else if (self.center.y == 0) {
-        self.center = CGPointMake(self.center.x, HEIGHT/2);
-    }else if (self.center.y == kScreenHeight) {
-        self.center = CGPointMake(self.center.x, kScreenHeight - HEIGHT/2);
-    }
-    //为了主按钮点击动画
-    //self.layer.masksToBounds = NO;
-    
-    //添加pan手势
-    //if (_pan) {
-    //    [self addGestureRecognizer:_pan];
-    //}
-    
+    [self fixedBound];
     [UIView animateWithDuration:showDuration animations:^{
-        
         _contentView.alpha  = 0;
-        
+        CGFloat height = self.frame.size.height;
         if (self.frame.origin.x + self.liveButton.frame.origin.x <= kScreenWidth/2) {
-            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frameWidth ,self.frameWidth);
+            //self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
         }else{
-            self.liveButton.frame = CGRectMake(0, 0, self.frameWidth, self.frameWidth);
-            self.frame = CGRectMake(self.frame.origin.x + 4 * (self.frameWidth + marginWith), self.frame.origin.y, self.frameWidth ,self.frameWidth);
+            self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
+            self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
         }
         self.backgroundColor = [UIColor clearColor];
     }];
+//    // pan手势
+//    if (_pan) {
+//        [self removeGestureRecognizer:_pan];
+//        [self addGestureRecognizer:_pan];
+//    }
     [self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
+    CGRect rect = self.frame;
+    NSLog(@"%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 - (void)onOpenTab
 {
     self.isShowTab = YES;
-    //拉出悬浮窗
-    if (self.center.x == 0) {
-        self.center = CGPointMake(WIDTH/2, self.center.y);
-    }else if (self.center.x == kScreenWidth) {
-        self.center = CGPointMake(kScreenWidth - WIDTH/2, self.center.y);
-    }else if (self.center.y == 0) {
-        self.center = CGPointMake(self.center.x, HEIGHT/2);
-    }else if (self.center.y == kScreenHeight) {
-        self.center = CGPointMake(self.center.x, kScreenHeight - HEIGHT/2);
-    }
-    
-    //为了主按钮点击动画
-    //self.layer.masksToBounds = YES;
-    
+    [self fixedBound];
     [UIView animateWithDuration:showDuration animations:^{
-        
         _contentView.alpha  = 1;
-        
+        CGFloat height = self.frame.size.height;
         if (self.frame.origin.x <= kScreenWidth/2) {
             [self resetContentview];
-            
-            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, WIDTH + 4 * (self.frameWidth + marginWith) ,self.frameWidth);
+            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, _contentView.frame.size.width, height);
         }else{
-            
+            CGFloat width = self.frame.size.width;
             [self moveContentviewLeft];
-            
-            self.liveButton.frame = CGRectMake((4 * (self.frameWidth + marginWith)), 0, self.frameWidth, self.frameWidth);
-            self.frame = CGRectMake(self.frame.origin.x  - 4 * (self.frameWidth + marginWith), self.frame.origin.y, (WIDTH + 4 * (self.frameWidth + marginWith)) ,self.frameWidth);
-        }
-        if (_bgcolor) {
-            self.backgroundColor = _bgcolor;
-        }else{
-            self.backgroundColor = [UIColor grayColor];
+            self.liveButton.frame = CGRectMake((4 * (width + marginWith)), 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
+            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + marginWith + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
         }
     }];
-    //移除pan手势
-    //if (_pan) {
-    //    [self removeGestureRecognizer:_pan];
-    //}
+//    // pan手势
+//    if (_pan) {
+//        [self removeGestureRecognizer:_pan];
+//        [self addGestureRecognizer:_pan];
+//    }
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
+    CGRect rect = self.frame;
+    NSLog(@"%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 #pragma mark  ------- button事件 ---------
 - (void)itemsClick:(id)sender{
-    if (self.isShowTab){
-        [self click:nil];
-    }
+//    if (self.isShowTab){
+//        [self onOpenTab];
+//    }
     UIButton *button = (UIButton *)sender;
     switch(button.tag)
     {
         case FloatingButton_Live:
+            /*
             if (!self.liveVM.isLiving) {
                 [self.liveVM start];
             }
@@ -635,6 +626,8 @@
                     [self onOpenTab];
                 }
             }
+             */
+            [self onOpenTab];
             break;
         case FloatingButton_Pause:
             if (self.liveVM.isPaused) {
