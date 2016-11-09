@@ -94,16 +94,16 @@
         UIImage *image = [ImageLoader imageNamed:@"live_off"];//[FloatingWindow getImageFromBundle:mainImageName];
         NSLog(@"%@-%@", mainImageName, image);
         [_liveButton setImage:image forState:UIControlStateNormal];
-        _liveButton.alpha = sleepAlpha;
-        [_liveButton addTarget:self action:@selector(click:) forControlEvents:UIControlEventTouchUpInside];
-        if (_animationColor) {
-            [_liveButton addTarget:self action:@selector(mainBtnTouchDown) forControlEvents:UIControlEventTouchDown];
-        }
+        //_liveButton.alpha = sleepAlpha;
+        //[_liveButton addTarget:self action:@selector(click:) forControlEvents:UIControlEventTouchUpInside];
+        //if (_animationColor) {
+        //    [_liveButton addTarget:self action:@selector(mainBtnTouchDown) forControlEvents:UIControlEventTouchDown];
+        //}
         _liveButton.tag = FloatingButton_Live;
         [_liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:_liveButton];
 
-        [self doBorderWidth:myBorderWidth color:nil cornerRadius:_frameWidth/2];
+        //[self doBorderWidth:myBorderWidth color:nil cornerRadius:_frameWidth/2];
         
         _pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(locationChange:)];
         _pan.delaysTouchesBegan = NO;
@@ -155,7 +155,7 @@
     self.cameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
-    [self.pauseButton setFrame: CGRectMake(self.frameWidth, 0, self.frameWidth , self.frameWidth )];
+    [self.pauseButton setFrame: CGRectMake(0, 0, self.frameWidth , self.frameWidth )];
     [self.micButton setFrame: CGRectMake(self.frameWidth * 1, 0, self.frameWidth , self.frameWidth )];
     [self.cameraButton setFrame: CGRectMake(self.frameWidth * 2, 0, self.frameWidth , self.frameWidth )];
     [self.stopButton setFrame: CGRectMake(self.frameWidth * 3, 0, self.frameWidth , self.frameWidth )];
@@ -272,7 +272,7 @@
     if(p.state == UIGestureRecognizerStateBegan)
     {
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
-        _liveButton.alpha = normalAlpha;
+        //_liveButton.alpha = normalAlpha;
     }
     if(p.state == UIGestureRecognizerStateChanged)
     {
@@ -280,9 +280,9 @@
     }
     else if(p.state == UIGestureRecognizerStateEnded)
     {
-        [self stopAnimation];
+        //[self stopAnimation];
         [self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
-        
+        /*
         if(panPoint.x <= kScreenWidth/2)
         {
             if(panPoint.y <= 40+HEIGHT/2 && panPoint.x >= 20+WIDTH/2)
@@ -339,6 +339,7 @@
                 }];
             }
         }
+         */
     }
 }
 //点击事件
@@ -422,9 +423,9 @@
 
 - (void)changeStatus
 {
-    [UIView animateWithDuration:1.0 animations:^{
-        _liveButton.alpha = sleepAlpha;
-    }];
+    //[UIView animateWithDuration:1.0 animations:^{
+    //    _liveButton.alpha = sleepAlpha;
+    //}];
     [UIView animateWithDuration:0.5 animations:^{
         CGFloat x = self.center.x < 20+WIDTH/2 ? 0 :  self.center.x > kScreenWidth - 20 -WIDTH/2 ? kScreenWidth : self.center.x;
         CGFloat y = self.center.y < 40 + HEIGHT/2 ? 0 : self.center.y > kScreenHeight - 40 - HEIGHT/2 ? kScreenHeight : self.center.y;
@@ -437,6 +438,7 @@
     }];
 }
 
+/*
 - (void)doBorderWidth:(CGFloat)width color:(UIColor *)color cornerRadius:(CGFloat)cornerRadius{
   //  self.layer.masksToBounds = YES;
     self.layer.cornerRadius = cornerRadius;
@@ -447,9 +449,11 @@
         self.layer.borderColor = color.CGColor;
     }
 }
+ */
 
 #pragma mark  ------- animation -------------
 
+/*
 - (void)buttonAnimation{
 
     self.layer.masksToBounds = NO;
@@ -488,7 +492,6 @@
         [_circleShape removeFromSuperlayer];
     }
 }
-
 - (CAShapeLayer *)createCircleShapeWithPosition:(CGPoint)position pathRect:(CGRect)rect radius:(CGFloat)radius
 {
     CAShapeLayer *circleShape = [CAShapeLayer layer];
@@ -508,7 +511,6 @@
     
     return circleShape;
 }
-
 - (CAAnimationGroup *)createFlashAnimationWithScale:(CGFloat)scale duration:(CGFloat)duration
 {
     CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
@@ -526,24 +528,34 @@
     _animationGroup.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
     
     return _animationGroup;
-}
+ }
 
 
 - (CGPathRef)createCirclePathWithRadius:(CGRect)frame radius:(CGFloat)radius
 {
     return [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius].CGPath;
-}
+ }
+ */
 - (void)onCloseTab
 {
     self.isShowTab = NO;
     
+    if (self.center.x == 0) {
+        self.center = CGPointMake(WIDTH/2, self.center.y);
+    }else if (self.center.x == kScreenWidth) {
+        self.center = CGPointMake(kScreenWidth - WIDTH/2, self.center.y);
+    }else if (self.center.y == 0) {
+        self.center = CGPointMake(self.center.x, HEIGHT/2);
+    }else if (self.center.y == kScreenHeight) {
+        self.center = CGPointMake(self.center.x, kScreenHeight - HEIGHT/2);
+    }
     //为了主按钮点击动画
-    self.layer.masksToBounds = NO;
+    //self.layer.masksToBounds = NO;
     
     //添加pan手势
-    if (_pan) {
-        [self addGestureRecognizer:_pan];
-    }
+    //if (_pan) {
+    //    [self addGestureRecognizer:_pan];
+    //}
     
     [UIView animateWithDuration:showDuration animations:^{
         
@@ -561,6 +573,7 @@
 }
 - (void)onOpenTab
 {
+    self.isShowTab = YES;
     //拉出悬浮窗
     if (self.center.x == 0) {
         self.center = CGPointMake(WIDTH/2, self.center.y);
@@ -572,9 +585,8 @@
         self.center = CGPointMake(self.center.x, kScreenHeight - HEIGHT/2);
     }
     
-    self.isShowTab = YES;
     //为了主按钮点击动画
-    self.layer.masksToBounds = YES;
+    //self.layer.masksToBounds = YES;
     
     [UIView animateWithDuration:showDuration animations:^{
         
@@ -598,9 +610,9 @@
         }
     }];
     //移除pan手势
-    if (_pan) {
-        [self removeGestureRecognizer:_pan];
-    }
+    //if (_pan) {
+    //    [self removeGestureRecognizer:_pan];
+    //}
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
 }
 #pragma mark  ------- button事件 ---------
@@ -651,23 +663,23 @@
         self.clickBolcks((FloatingButtonIndex)button.tag);
     }
 }
-
+/*
 - (void)mainBtnTouchDown{
     if (!self.isShowTab) {
         [self performSelector:@selector(buttonAnimation) withObject:nil afterDelay:0.5];
     }
 }
-
+*/
 #pragma mark  ------- 设备旋转 -----------
 - (void)orientChange:(NSNotification *)notification{
     //不设置的话,长按动画那块有问题
-    self.layer.masksToBounds = YES;
+    //self.layer.masksToBounds = YES;
     
     //旋转前要先改变frame，否则坐标有问题（临时办法）
     self.frame = CGRectMake(0, kScreenHeight - self.frame.origin.y - self.frame.size.height, self.frame.size.width,self.frame.size.height);
     
     if (self.isShowTab) {
-        [self click:nil];
+        [self onOpenTab];
     }
 }
 
