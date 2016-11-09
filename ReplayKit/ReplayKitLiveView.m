@@ -22,6 +22,7 @@
 
 @property (strong, nonatomic) ReplayKitLiveViewModel *liveVM;
 @property (strong, nonatomic) UIView *contentView;
+@property (strong, nonatomic) UIImageView *background;
 @property (strong, nonatomic) UIButton *liveButton;
 @property (strong, nonatomic) UIButton *pauseButton;
 @property (strong, nonatomic) UIButton *micButton;
@@ -90,11 +91,11 @@ static ReplayKitLiveView* _instance = nil;
         
         _isShowTab = FALSE;
 
-        self.backgroundColor = [UIColor clearColor];
-        self.windowLevel = UIWindowLevelAlert-1;  //如果想在 alert 之上，则改成 + 2
+        //self.backgroundColor = [UIColor clearColor];
+        //self.windowLevel = UIWindowLevelAlert-1;  //如果想在 alert 之上，则改成 + 2
         
         _bgcolor = bgcolor;
-        //self.backgroundColor = _bgcolor;
+        self.backgroundColor = [UIColor grayColor];
         _animationColor = animationColor;
         
         _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
@@ -166,9 +167,9 @@ static ReplayKitLiveView* _instance = nil;
     CGFloat height = self.frame.size.width - liveButtonFixHeight;
     UIImage* image = [ReplayKitLiveView getImageFromBundle:@"live_adorn"];
     image = [image stretchableImageWithLeftCapWidth:image.size.width * 0.35 topCapHeight:image.size.height * 0.5];
-    UIImageView *bgIamge = [[UIImageView alloc] initWithImage:image];
-    [bgIamge setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
-    [self.contentView addSubview:bgIamge];
+    self.background = [[UIImageView alloc] initWithImage:image];
+    [self.background setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
+    [self.contentView addSubview:_background];
     
     CGFloat startPosX = _liveButton.frame.size.width;
     self.pauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -253,16 +254,6 @@ static ReplayKitLiveView* _instance = nil;
     [self.liveVM addObserver:self forKeyPath:@"paused" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
 }
 
-#pragma mark ------- contentview 操作 --------------------
-//按钮在屏幕右边时，左移contentview
-- (void)moveContentviewLeft{
-    //_contentView.frame = (CGRect){self.frameWidth/2 - marginWith, 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
-}
-
-//按钮在屏幕左边时，contentview恢复默认
-- (void)resetContentview{
-    //_contentView.frame = (CGRect){marginWith , 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
-}
 
 /*
 #pragma mark  ------- 绘图操作 ----------
@@ -554,6 +545,16 @@ static ReplayKitLiveView* _instance = nil;
     return [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius].CGPath;
  }
  */
+#pragma mark ------- contentview 操作 --------------------
+//按钮在屏幕右边时，左移contentview
+- (void)moveContentviewLeft{
+    //_contentView.frame = (CGRect){self.frameWidth/2 - marginWith, 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
+}
+
+//按钮在屏幕左边时，contentview恢复默认
+- (void)resetContentview{
+    //_contentView.frame = (CGRect){marginWith , 0, 5 * (_frameWidth + marginWith + liveButtonFixWidth), _frameWidth};
+}
 - (void)fixedBound
 {
     CGFloat width = self.frame.size.width;
@@ -597,7 +598,7 @@ static ReplayKitLiveView* _instance = nil;
             self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
             self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
         }
-        self.backgroundColor = [UIColor clearColor];
+        //self.backgroundColor = [UIColor clearColor];
     }];
 //    // pan手势
 //    if (_pan) {
@@ -617,13 +618,20 @@ static ReplayKitLiveView* _instance = nil;
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha  = 1;
         CGFloat height = self.frame.size.height;
+        CGSize buttonSize = self.liveButton.frame.size;
         if (self.frame.origin.x <= kScreenWidth/2) {
             [self resetContentview];
+            _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, buttonSize.width + 4 * (self.frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize.width - liveButtonFixWidth);
+            [self.background setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
+            [_liveButton setFrame:(CGRect){0, 0, buttonSize.width, buttonSize.height}];
             self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, _contentView.frame.size.width, height);
         }else{
             CGFloat width = self.frame.size.width;
+            CGFloat lastButtonX = _stopButton.frame.origin.x + _stopButton.frame.size.width / 2;
             [self moveContentviewLeft];
-            self.liveButton.frame = CGRectMake((4 * (width + margin)), 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
+            _contentView.frame = CGRectMake(-(buttonSize.width + 2 * margin), liveButtonFixHeight / 2, buttonSize.width + 4 * (self.frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize.width - liveButtonFixWidth);
+            [self.background setFrame: CGRectMake(buttonSize.width, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
+            self.liveButton.frame = CGRectMake(_contentView.frame.size.width - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
             self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
         }
     }];
@@ -645,6 +653,7 @@ static ReplayKitLiveView* _instance = nil;
     switch(button.tag)
     {
         case FloatingButton_Live:
+            /*
             if (!self.liveVM.isLiving) {
                 [self.liveVM start];
             }
@@ -656,6 +665,8 @@ static ReplayKitLiveView* _instance = nil;
                     [self onOpenTab];
                 }
             }
+             */
+            [self onOpenTab];
             break;
         case FloatingButton_Pause:
             if (self.liveVM.isPaused) {
