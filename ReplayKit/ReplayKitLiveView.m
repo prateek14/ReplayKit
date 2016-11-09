@@ -1,17 +1,13 @@
-//
-//  RPLiveCtrlView.m
-//  Fox
-//
-//  Created by jinchu darwin on 12/10/2016.
-//  Copyright © 2016 Apple Inc. All rights reserved.
-//
-
 #import "ReplayKitLiveView.h"
-//#import "ReactiveCocoa/ReactiveCocoa.h"
-//#import "Masonry/Masonry.h"
 #import "ImageLoader.h"
+#import "FloatingWindow.h"
 
 @interface ReplayKitLiveView()
+
+@property(nonatomic)NSInteger frameWidth;
+@property(nonatomic,strong)UIView *contentView;
+@property(nonatomic,strong)UIColor *bgcolor;
+@property(nonatomic,strong)UIColor *animationColor;
 
 @property (strong, nonatomic) ReplayKitLiveViewModel *liveVM;
 @property (strong, nonatomic) UIButton *liveButton;
@@ -26,23 +22,36 @@
 
 @implementation ReplayKitLiveView
 
-- (instancetype)init
+- (instancetype)initWithFrame:(CGRect)frame bgcolor:(UIColor *)bgcolor{
+    return  [self initWithFrame:frame bgcolor:bgcolor animationColor:nil];
+}
+
+- (instancetype)initWithFrame:(CGRect)frame bgcolor:(UIColor *)bgcolor animationColor:animationColor
 {
-    self = [super init];
-    if (self) {
-        [self commonSetup];
+    if(self = [super initWithFrame:frame])
+    {
+        _menuOpen = NO;
+        
+        self.backgroundColor = [UIColor clearColor];
+        self.windowLevel = UIWindowLevelAlert;  //如果想在 alert 之上，则改成 + 2
+        _bgcolor = bgcolor;
+        _frameWidth = frame.size.width;
+        _animationColor = animationColor;
+        
+        _contentView = [[UIView alloc] initWithFrame:(CGRect){_frameWidth ,0, 5 * (_frameWidth + 5),_frameWidth}];
+        _contentView.alpha  = 0;
+        
+        [self addSubview:_contentView];
+        [self setupViews];
     }
     return self;
 }
 
-- (void)awakeFromNib {
-    [super awakeFromNib];
-    [self commonSetup];
+- (void)dissmissWindow{
+    self.hidden = YES;
 }
-
-- (void)commonSetup {
-    _menuOpen = NO;
-    [self setupViews];
+- (void)showWindow{
+    self.hidden = NO;
 }
 
 - (void)setupViews {
@@ -61,18 +70,11 @@
     self.cameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
-    [self setupCloseMenu];
-    
     self.liveButton.tag = FloatingButton_Live;
     self.pauseButton.tag = FloatingButton_Pause;
     self.micButton.tag = FloatingButton_Micphone;
     self.cameraButton.tag = FloatingButton_Webcam;
     self.stopButton.tag = FloatingButton_Stop;
-    [self.liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
-    [self.pauseButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
-    [self.micButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
-    [self.cameraButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
-    [self.stopButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)itemsClick:(id)sender{
@@ -120,6 +122,8 @@
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
+    UIImage* image = [ImageLoader imageNamed:@"camera_on"];
+    NSLog(@"%@", image);
     if([keyPath isEqualToString:@"cameraEnabled"])
     {
         if (self.liveVM.isCameraEnabled) {
@@ -163,30 +167,54 @@
     [self.liveVM addObserver:self forKeyPath:@"cameraEnabled" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     [self.liveVM addObserver:self forKeyPath:@"microphoneEnabled" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
-    [self.liveVM addObserver:self forKeyPath:@"paused" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];}
+    [self.liveVM addObserver:self forKeyPath:@"paused" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
+    [self setupCloseMenu];
+}
 
 - (void)bindVM:(ReplayKitLiveViewModel *)liveVM {
     self.liveVM = liveVM;
     [self setupVMObserver];
 }
 
-- (NSArray<UIButton *>*)openMenus {
-    return @[self.liveButton, self.pauseButton, self.micButton, self.cameraButton, self.stopButton];
-}
-
-- (NSArray<UIButton *>*)closeMenus {
-    return @[self.liveButton];
+- (void)closeMenus {
+    if (self.liveButton.superview) { [self.liveButton removeFromSuperview]; }
+    if (self.pauseButton.superview) { [self.liveButton removeFromSuperview]; }
+    if (self.micButton.superview) { [self.liveButton removeFromSuperview]; }
+    if (self.cameraButton.superview) { [self.liveButton removeFromSuperview]; }
+    if (self.stopButton.superview) { [self.liveButton removeFromSuperview]; }
 }
 
 - (void)setupOpenMenu {
-    for (UIView *view in [self closeMenus]) {
-        if (view.superview) {
-            [view removeFromSuperview];
-        }
-    }
-    
+    [self closeMenus];
     [UIView animateWithDuration:0.3 animations:^{
-        [self setupMenus:[self openMenus]];
+        
+        self.liveButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.pauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.micButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.cameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        
+        self.liveButton.tag = FloatingButton_Live;
+        self.pauseButton.tag = FloatingButton_Pause;
+        self.micButton.tag = FloatingButton_Micphone;
+        self.cameraButton.tag = FloatingButton_Webcam;
+        self.stopButton.tag = FloatingButton_Stop;
+        
+        [self.liveButton setFrame: CGRectMake(self.frame.size.width, 0, self.frame.size.width , self.frame.size.width)];
+        [self.contentView addSubview:_liveButton];
+        [self.pauseButton setFrame: CGRectMake(self.frame.size.width * 1, 0, self.frame.size.width , self.frame.size.width)];
+        [self addSubview:_pauseButton];
+        [self.micButton setFrame: CGRectMake(self.frame.size.width * 2, 0, self.frame.size.width , self.frame.size.width)];
+        [self.contentView addSubview:_micButton];
+        [self.cameraButton setFrame: CGRectMake(self.frame.size.width * 3, 0, self.frame.size.width , self.frame.size.width)];
+        [self.contentView addSubview:_cameraButton];
+        [self.stopButton setFrame: CGRectMake(self.frame.size.width * 4, 0, self.frame.size.width , self.frame.size.width)];
+        [self.contentView addSubview:_stopButton];
+        [self.liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.pauseButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.micButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.cameraButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.stopButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         [self layoutIfNeeded];
     } completion:^(BOOL finished) {
         self.menuOpen = YES;
@@ -194,24 +222,17 @@
 }
 
 - (void)setupCloseMenu {
-    for (UIView *view in [self openMenus]) {
-        if (view.superview) {
-            [view removeFromSuperview];
-        }
-    }
+    [self closeMenus];
     [UIView animateWithDuration:0.3 animations:^{
-        [self setupMenus:[self closeMenus]];
+        self.liveButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.liveButton.tag = FloatingButton_Live;
+        [self.liveButton setFrame: CGRectMake(self.frame.size.width, 0, self.frame.size.width , self.frame.size.width)];
+        [self.contentView addSubview:_liveButton];
+        [self.liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         [self layoutIfNeeded];
     } completion:^(BOOL finished) {
         self.menuOpen = NO;
     }];
-}
-- (void)setupMenus:(NSArray<UIView *>*)menus {
-    for(int i = 0; i < menus.count; ++ i)
-    {
-        [menus[i] setFrame: CGRectMake(self.frame.size.width * i++, 0, self.frame.size.width , self.frame.size.width)];
-        [self addSubview:menus[i]];
-    }
 }
 
 @end

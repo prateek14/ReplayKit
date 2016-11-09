@@ -1,5 +1,5 @@
 #import <UIKit/UIKit.h>
-
+#import "ReplayKitLiveViewModel.h"
 
 @interface FloatingWindow : UIWindow
 
@@ -23,5 +23,7 @@ typedef enum
 - (instancetype)initWithFrame:(CGRect)frame mainImageName:(NSString*)name imagesAndTitle:(NSDictionary*)imagesAndTitle bgcolor:(UIColor *)bgcolor animationColor:animationColor;
 - (void)showWindow;
 - (void)dissmissWindow;
+
+- (void)setupVMObserver:(ReplayKitLiveViewModel *)liveVM;
 
 @end
