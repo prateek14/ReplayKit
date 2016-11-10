@@ -6,17 +6,10 @@
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 
 #define animateDuration 0.3         //位置改变动画时间
-#define showDuration 0.1            //展开动画时间
-#define statusChangeDuration  3.0   //状态改变时间
-#define normalAlpha  0.8            //正常状态时背景alpha值
-#define sleepAlpha  0.3             //隐藏到边缘时的背景alpha值
-#define myBorderWidth 1.0           //外框宽度
+#define showDuration 0.5            //展开动画时间
 #define margin  5                   //间隔
 #define liveButtonFixWidth 15
 #define liveButtonFixHeight 10
-
-
-#define WZFlashInnerCircleInitialRaius  20
 
 @interface ReplayKitLiveView()
 
@@ -30,13 +23,10 @@
 @property (strong, nonatomic) UIButton *stopButton;
 
 @property(nonatomic)BOOL  isShowTab;
+@property(nonatomic)BOOL  isLiveButtonInLeft;
 @property(nonatomic,strong)UIPanGestureRecognizer *pan;
-//@property(nonatomic,strong)UITapGestureRecognizer *tap;
-//@property(nonatomic,strong)UIColor *bgcolor;
-//@property(nonatomic,strong)CAAnimationGroup *animationGroup;
-//@property(nonatomic,strong)CAShapeLayer *circleShape;
-//@property(nonatomic,strong)UIColor *animationColor;
 @property(nonatomic)CGPoint startPanOffset;
+@property(nonatomic)CGFloat contentWidth;
 
 + (ReplayKitLiveView*)Instance;
 
@@ -88,12 +78,8 @@ static ReplayKitLiveView* _instance = nil;
     {
         _isShowTab = FALSE;
 
-        //self.backgroundColor = [UIColor clearColor];
+        self.backgroundColor = [UIColor clearColor];
         self.windowLevel = UIWindowLevelAlert + 1;  //如果想在 alert 之上，则改成 + 2
-        
-        //_bgcolor = bgcolor;
-        self.backgroundColor = [UIColor grayColor];
-        //_animationColor = animationColor;
         
         _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         UIImage *image = [ReplayKitLiveView getImageFromBundle:@"live_off"];
@@ -102,8 +88,9 @@ static ReplayKitLiveView* _instance = nil;
         _liveButton.tag = FloatingButton_Live;
         [_liveButton addTarget:self action:@selector(itemsClick:) forControlEvents:UIControlEventTouchUpInside];
         CGFloat buttonSize = _liveButton.frame.size.width;
-        _contentView = [[UIView alloc] initWithFrame:(CGRect){margin, liveButtonFixHeight / 2, buttonSize + 4 * (frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize - liveButtonFixWidth}];
-        _contentView.alpha  = 0;
+        _contentWidth = buttonSize + 4 * (frame.size.width - liveButtonFixWidth + margin) - margin;
+        _contentView = [[UIView alloc] initWithFrame:(CGRect){margin, liveButtonFixHeight / 2, 0, buttonSize - liveButtonFixWidth}];
+        _contentView.alpha = 0;
         [self addSubview:_contentView];
         //添加按钮
         [self setButtons];
@@ -112,8 +99,6 @@ static ReplayKitLiveView* _instance = nil;
         _pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(locationChange:)];
         _pan.delaysTouchesBegan = NO;
         [self addGestureRecognizer:_pan];
-        //_tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(click:)];
-        //[self addGestureRecognizer:_tap];
         //设备旋转
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientChange:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
     }
@@ -133,11 +118,11 @@ static ReplayKitLiveView* _instance = nil;
 }
 
 - (void)setButtons{
-    CGFloat width = self.frame.size.width - liveButtonFixWidth;
+    CGFloat width = WIDTH - liveButtonFixWidth;
     UIImage* image = [ReplayKitLiveView getImageFromBundle:@"live_adorn"];
     image = [image stretchableImageWithLeftCapWidth:image.size.width * 0.35 topCapHeight:image.size.height * 0.5];
     self.background = [[UIImageView alloc] initWithImage:image];
-    [self.background setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
+    [self.background setFrame: CGRectMake(0, 0, _liveButton.frame.size.width, _contentView.frame.size.height)];
     [self.contentView addSubview:_background];
     
     CGFloat startPosX = _liveButton.frame.size.width;
@@ -261,12 +246,10 @@ static ReplayKitLiveView* _instance = nil;
 #pragma mark ------- contentview 操作 --------------------
 - (void)fixedBound
 {
-    CGFloat width = self.frame.size.width;
-    CGFloat height = self.frame.size.height;
-    CGFloat left = width / 2 + margin;
-    CGFloat right = kScreenWidth - (width / 2 + margin);
-    CGFloat top = height / 2 + margin;
-    CGFloat bottom = kScreenHeight - (height / 2 + margin);
+    CGFloat left = WIDTH / 2 + margin;
+    CGFloat right = kScreenWidth - (WIDTH / 2 + margin);
+    CGFloat top = HEIGHT / 2 + margin;
+    CGFloat bottom = kScreenHeight - (HEIGHT / 2 + margin);
     if (self.center.x < left) {
         [UIView animateWithDuration:animateDuration animations:^{
             self.center = CGPointMake(left, self.center.y);
@@ -287,30 +270,33 @@ static ReplayKitLiveView* _instance = nil;
     }
     NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
 }
+- (void)fadeoutButton:(UIButton*) btn
+{
+    
+}
+- (void)fadeinButton:(UIButton*) btn
+{
+    
+}
 - (void)onCloseTab
 {
     if(!self.isShowTab)
         return;
     self.isShowTab = NO;
     [UIView animateWithDuration:showDuration animations:^{
-        _contentView.alpha  = 0;
-        CGFloat height = self.frame.size.height;
+        _contentView.alpha = 0;
         CGSize buttonSize = self.liveButton.frame.size;
-        if (self.frame.origin.x + self.liveButton.frame.origin.x <= kScreenWidth/2) {
-            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, height, height);
+        self.liveButton.frame = CGRectMake(0, 0, buttonSize.width, buttonSize.height);
+        _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, 0, buttonSize.width - liveButtonFixWidth);
+        _background.frame = CGRectMake(0, 0, buttonSize.width, _contentView.frame.size.height);
+        
+        if (_isLiveButtonInLeft) {
+            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, HEIGHT, HEIGHT);
         }else{
-            CGFloat width = self.frame.size.width;
-            //self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
-            //self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
-            self.liveButton.frame = CGRectMake(_contentView.frame.size.width - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
-            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, height, height);
+            self.frame = CGRectMake(self.frame.origin.x + _contentWidth - 2 * margin - buttonSize.width, self.frame.origin.y, HEIGHT, HEIGHT);
         }
-        //self.backgroundColor = [UIColor clearColor];
     }];
     [self fixedBound];
-    //[self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
-    CGRect rect = self.frame;
-    NSLog(@"onCloseTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 - (void)onOpenTab
 {
@@ -318,28 +304,25 @@ static ReplayKitLiveView* _instance = nil;
         return;
     self.isShowTab = YES;
     [UIView animateWithDuration:showDuration animations:^{
-        _contentView.alpha  = 1;
-        CGFloat height = self.frame.size.height;
+        _contentView.alpha = 1;
         CGSize buttonSize = self.liveButton.frame.size;
         if (self.frame.origin.x <= kScreenWidth/2) {
             //按钮在屏幕左边时，contentview恢复默认
-            _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, buttonSize.width + 4 * (self.frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize.width - liveButtonFixWidth);
-            [self.background setFrame: CGRectMake(0, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
-            [_liveButton setFrame:(CGRect){0, 0, buttonSize.width, buttonSize.height}];
-            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, _contentView.frame.size.width, height);
+            _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, _contentWidth, buttonSize.width - liveButtonFixWidth);
+            _background.frame = CGRectMake(0, 0, _contentWidth, _contentView.frame.size.height);
+            _liveButton.frame = CGRectMake(0, 0, buttonSize.width, buttonSize.height);
+            self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, _contentWidth, HEIGHT);
+            _isLiveButtonInLeft = YES;
         }else{
-            CGFloat width = self.frame.size.width;
             //按钮在屏幕右边时，左移contentview
-            _contentView.frame = CGRectMake(-(buttonSize.width + 2 * margin), liveButtonFixHeight / 2, buttonSize.width + 4 * (self.frame.size.width - liveButtonFixWidth + margin) - margin, buttonSize.width - liveButtonFixWidth);
-            [self.background setFrame: CGRectMake(buttonSize.width, 0, _contentView.frame.size.width, _contentView.frame.size.height)];
-            self.liveButton.frame = CGRectMake(_contentView.frame.size.width - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
-            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
+            _contentView.frame = CGRectMake(-(buttonSize.width + 2 * margin), liveButtonFixHeight / 2, _contentWidth, buttonSize.width - liveButtonFixWidth);
+            _background.frame = CGRectMake(buttonSize.width, 0, _contentWidth, _contentView.frame.size.height);
+            _liveButton.frame = CGRectMake(_contentWidth - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
+            self.frame = CGRectMake(self.frame.origin.x - _contentWidth / 2 - 2 * margin - buttonSize.width, self.frame.origin.y, _contentWidth, HEIGHT);
+            _isLiveButtonInLeft = NO;
         }
     }];
     [self fixedBound];
-    //[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
-    CGRect rect = self.frame;
-    NSLog(@"onOpenTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 #pragma mark  ------- button事件 ---------
 - (void)itemsClick:(id)sender{
@@ -347,7 +330,6 @@ static ReplayKitLiveView* _instance = nil;
     switch(button.tag)
     {
         case FloatingButton_Live:
-            /*
             if (!self.liveVM.isLiving) {
                 [self.liveVM start];
             }
@@ -359,8 +341,6 @@ static ReplayKitLiveView* _instance = nil;
                     [self onOpenTab];
                 }
             }
-             */
-            [self onOpenTab];
             break;
         case FloatingButton_Pause:
             if (self.liveVM.isPaused) {
@@ -392,7 +372,7 @@ static ReplayKitLiveView* _instance = nil;
 #pragma mark  ------- 设备旋转 -----------
 - (void)orientChange:(NSNotification *)notification{
     //旋转前要先改变frame，否则坐标有问题（临时办法）
-    self.frame = CGRectMake(0, kScreenHeight - self.frame.origin.y - self.frame.size.height, self.frame.size.width,self.frame.size.height);
+    self.frame = CGRectMake(0, kScreenHeight - self.frame.origin.y - HEIGHT, WIDTH, HEIGHT);
 }
 
 

@@ -34,7 +34,7 @@
 - (void)showFloatWindow{
     self.liveVM = [[ReplayKitLiveViewModel alloc] initWithViewController:self];
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
-    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(0, kScreenWidth / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth / 2, kScreenHeight / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     [_liveView setupVMObserver:_liveVM];
     _liveVM.microphoneEnabled = YES;
     _liveVM.cameraEnabled = YES;
