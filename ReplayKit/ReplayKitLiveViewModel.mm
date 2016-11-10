@@ -1,6 +1,6 @@
 #import "ReplayKitLiveViewModel.h"
 #import "ReplayKit/ReplayKit.h"
-#import "ReplayKitLiveView.h"
+#import "ReplayKit+LiveViewController.h"
 
 #define CheckStartTimeout 5
 
@@ -104,9 +104,9 @@
         
         if (!error) {
             broadcastActivityViewController.delegate = self;
-            broadcastActivityViewController.modalPresentationStyle = UIModalPresentationPopover;
-            broadcastActivityViewController.view.window.windowLevel = UIWindowLevelAlert + 2;
-            NSLog(@"Selectting broadcast service");
+            broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+            //broadcastActivityViewController.view.window.windowLevel = UIWindowLevelAlert + 2;
+            NSLog(@"Selectting broadcast service, windowLevel=%f", broadcastActivityViewController.view.window.windowLevel);
             [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
         }
         else {
@@ -327,10 +327,10 @@
 extern "C" {
     void replaykit_startLiveBroadcast()
     {
-        [[ReplayKitLiveView Instance] showWindow];
+        [[[ReplayKitLiveViewController Instance] liveView] showWindow];
     }
     void replaykit_stopLiveBroadcast()
     {
-        [[ReplayKitLiveView Instance] dissmissWindow];
+        [[[ReplayKitLiveViewController Instance] liveView] dissmissWindow];
     }
 }

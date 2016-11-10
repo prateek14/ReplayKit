@@ -2,7 +2,6 @@
 #import "ReplayKitLiveViewModel.h"
 #import "ReplayKitLiveView.h"
 #import "WebKit/WebKit.h"
-#import "ReplayKitLiveView.h"
 #import "UnityAppController.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
@@ -11,7 +10,6 @@
 @interface ReplayKitLiveViewController()
 
 @property (strong, nonatomic) ReplayKitLiveViewModel *liveVM;
-@property (nonatomic) IBOutlet ReplayKitLiveView *liveView;
 @property (nonatomic, weak) UIView *cameraPreview;
 
 @property (nonatomic, copy) NSURL *chatURL;
@@ -20,6 +18,25 @@
 @end
 
 @implementation ReplayKitLiveViewController
+
+static ReplayKitLiveViewController* _instance = nil;
+
++ (nullable instancetype)Instance
+{
+    return _instance;
+}
+
+- (instancetype)init
+{
+    if(_instance)
+        return _instance;
+    self = [super init];
+    _instance = self;
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -36,8 +53,8 @@
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth / 2, kScreenHeight / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     [_liveView setupVMObserver:_liveVM];
-    _liveVM.microphoneEnabled = YES;
-    _liveVM.cameraEnabled = YES;
+    _liveVM.microphoneEnabled = NO;
+    _liveVM.cameraEnabled = NO;
     _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
         switch(btnIndex)
         {
@@ -141,25 +158,7 @@
         self.chatView = nil;
     }
 }
-#pragma mark - ios9 shared operation
-- (void)startRecorder
-{
-    RPScreenRecorder *recorder = [RPScreenRecorder sharedRecorder];
-    if (!recorder.available) {
-        NSLog(@"recorder is not available");
-        return;
-    }
-    if (recorder.recording) {
-        NSLog(@"it is recording");
-        return;
-    }
-    [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
-        if (error) {
-            NSLog(@"start recorder error - %@",error);
-        }
-        //[self.startBtn setTitle:@"Recording" forState:UIControlStateNormal];
-    }];
-}
+
 /*
 #pragma mark - Navigation
 

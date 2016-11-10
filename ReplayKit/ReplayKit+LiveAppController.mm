@@ -21,7 +21,7 @@
     [_unityView addSubview:self.floatViewController.view];
     [self.floatViewController.view setFrame:_unityView.frame];
     // 把根视图和控制器全部换成我们自定义的内容。
-    _rootController = self.floatViewController;
+    //_rootController = self.floatViewController;
     _rootView = _unityView;
 }
 

@@ -28,18 +28,16 @@
 @property(nonatomic)CGPoint startPanOffset;
 @property(nonatomic)CGFloat contentWidth;
 
-+ (ReplayKitLiveView*)Instance;
-
 @end
 
-static ReplayKitLiveView* _instance = nil;
+//static ReplayKitLiveView* _instance = nil;
 
 @implementation ReplayKitLiveView
 
-+ (ReplayKitLiveView*)Instance
-{
-    return _instance;
-}
+//+ (ReplayKitLiveView*)Instance
+//{
+//    return _instance;
+//}
 
 + (UIImage *)getImageFromBundle:(NSString *)imgName{
     return [ReplayKitLiveView getImageFromBundle:imgName ext:@"png"];
@@ -56,10 +54,10 @@ static ReplayKitLiveView* _instance = nil;
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
-    if(_instance)
-        return _instance;
+//    if(_instance)
+//        return _instance;
     self = [super initWithFrame:frame];
-    _instance = self;
+//    _instance = self;
     if (self) {
         // Initialization code
     }
@@ -72,14 +70,14 @@ static ReplayKitLiveView* _instance = nil;
 
 - (instancetype)initWithFrame:(CGRect)frame bgcolor:(UIColor *)bgcolor animationColor:animationColor
 {
-    if(_instance)
-        return _instance;
+//    if(_instance)
+//        return _instance;
     if(self = [super initWithFrame:frame])
     {
         _isShowTab = FALSE;
 
         self.backgroundColor = [UIColor clearColor];
-        self.windowLevel = UIWindowLevelAlert + 1;  //如果想在 alert 之上，则改成 + 2
+        self.windowLevel = UIWindowLevelNormal + 1;
         
         _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         UIImage *image = [ReplayKitLiveView getImageFromBundle:@"live_off"];
@@ -102,7 +100,7 @@ static ReplayKitLiveView* _instance = nil;
         //设备旋转
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientChange:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
     }
-    _instance = self;
+    //_instance = self;
     return self;
 }
 
@@ -162,19 +160,19 @@ static ReplayKitLiveView* _instance = nil;
     if([keyPath isEqualToString:@"cameraEnabled"])
     {
         if (self.liveVM.isCameraEnabled) {
-            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_off"] forState:UIControlStateNormal];
+            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
         }
         else {
-            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
+            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_off"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"microphoneEnabled"])
     {
         if (self.liveVM.isMicrophoneEnabled) {
-            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_off"] forState:UIControlStateNormal];
+            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
         }
         else {
-            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
+            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_off"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"living"])
