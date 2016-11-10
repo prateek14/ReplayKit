@@ -2,7 +2,7 @@
 
 @interface ScreenRecord : NSObject<RPScreenRecorderDelegate, RPPreviewViewControllerDelegate>
 
-+ (ScreenRecord*)Instance;
++ (nullable instancetype)Instance;
 - (void)startRecording;
 - (void)stopRecording;
 - (void)discardRecording;

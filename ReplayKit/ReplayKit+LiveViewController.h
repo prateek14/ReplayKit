@@ -3,5 +3,4 @@
 
 @interface ReplayKitLiveViewController : UIViewController
 
-
 @end

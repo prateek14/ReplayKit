@@ -89,7 +89,7 @@ static ReplayKitLiveView* _instance = nil;
         _isShowTab = FALSE;
 
         //self.backgroundColor = [UIColor clearColor];
-        //self.windowLevel = UIWindowLevelAlert-1;  //如果想在 alert 之上，则改成 + 2
+        self.windowLevel = UIWindowLevelAlert + 1;  //如果想在 alert 之上，则改成 + 2
         
         //_bgcolor = bgcolor;
         self.backgroundColor = [UIColor grayColor];
@@ -289,28 +289,31 @@ static ReplayKitLiveView* _instance = nil;
 }
 - (void)onCloseTab
 {
-    [self fixedBound];
     if(!self.isShowTab)
         return;
     self.isShowTab = NO;
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha  = 0;
         CGFloat height = self.frame.size.height;
+        CGSize buttonSize = self.liveButton.frame.size;
         if (self.frame.origin.x + self.liveButton.frame.origin.x <= kScreenWidth/2) {
             self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, height, height);
         }else{
-            self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
-            self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
+            CGFloat width = self.frame.size.width;
+            //self.liveButton.frame = CGRectMake(0, 0, self.liveButton.frame.size.width, self.liveButton.frame.size.height);
+            //self.frame = CGRectMake(_stopButton.frame.origin.x, _stopButton.frame.origin.y, height, height);
+            self.liveButton.frame = CGRectMake(_contentView.frame.size.width - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
+            self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, height, height);
         }
         //self.backgroundColor = [UIColor clearColor];
     }];
+    [self fixedBound];
     //[self performSelector:@selector(changeStatus) withObject:nil afterDelay:statusChangeDuration];
     CGRect rect = self.frame;
     NSLog(@"onCloseTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
 }
 - (void)onOpenTab
 {
-    [self fixedBound];
     if(self.isShowTab)
         return;
     self.isShowTab = YES;
@@ -333,6 +336,7 @@ static ReplayKitLiveView* _instance = nil;
             self.frame = CGRectMake(self.frame.origin.x - 5 * (width + margin + liveButtonFixWidth), self.frame.origin.y, _contentView.frame.size.width, height);
         }
     }];
+    [self fixedBound];
     //[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeStatus) object:nil];
     CGRect rect = self.frame;
     NSLog(@"onOpenTab:self.frame=%f,%f,%f,%f", rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);

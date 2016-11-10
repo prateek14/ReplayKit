@@ -105,6 +105,7 @@
         if (!error) {
             broadcastActivityViewController.delegate = self;
             broadcastActivityViewController.modalPresentationStyle = UIModalPresentationPopover;
+            broadcastActivityViewController.view.window.windowLevel = UIWindowLevelAlert + 2;
             NSLog(@"Selectting broadcast service");
             [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
         }

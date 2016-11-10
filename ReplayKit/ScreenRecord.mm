@@ -32,7 +32,7 @@ static ScreenRecord* _instance;
     RPPreviewViewController* _previewController;
 }
 
-+ (ScreenRecord*)Instance
++ (nullable instancetype)Instance
 {
     if (_instance == nil)
     {
@@ -65,7 +65,7 @@ static ScreenRecord* _instance;
         return;
     }
     [recorder setDelegate:self];
-    [recorder startRecordingWithHandler:^(NSError * _Nullable error) {
+    [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
         if (error == nil)
         {
             [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:nil];
@@ -148,7 +148,7 @@ static ScreenRecord* _instance;
     [_previewController setModalPresentationStyle:UIModalPresentationFullScreen];
     [[[UnityGetGLView() window] rootViewController] presentViewController:_previewController animated:YES completion:^()
      {
-         //_previewController = nil;
+         _previewController = nil;
      }];
 }
 

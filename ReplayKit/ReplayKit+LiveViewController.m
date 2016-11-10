@@ -3,6 +3,7 @@
 #import "ReplayKitLiveView.h"
 #import "WebKit/WebKit.h"
 #import "ReplayKitLiveView.h"
+#import "UnityAppController.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
@@ -19,7 +20,6 @@
 @end
 
 @implementation ReplayKitLiveViewController
-
 
 - (void)viewDidLoad {
     [super viewDidLoad];

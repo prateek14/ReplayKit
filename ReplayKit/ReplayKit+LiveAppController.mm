@@ -6,25 +6,23 @@
 
 @interface ReplayKitLiveAppController : UnityAppController
 
+@property (strong, nonatomic) ReplayKitLiveViewController *floatViewController;
+
 @end
 
 @implementation ReplayKitLiveAppController
 
 - (void)willStartWithViewController:(UIViewController*)controller {
     // 新建自定义视图控制器。
-    ReplayKitLiveViewController *floatViewController = [[ReplayKitLiveViewController alloc] init];
+    self.floatViewController = [[ReplayKitLiveViewController alloc] init];
     // 把Unity的内容视图作为子视图放到我们自定义的视图里面。
     //[viewController.view addSubview:_unityView];
     //[_unityView setFrame:CGRectMake(0, 0, 300, 300)];
-    [_unityView addSubview:floatViewController.view];
-    [floatViewController.view setFrame:_unityView.frame];
+    [_unityView addSubview:self.floatViewController.view];
+    [self.floatViewController.view setFrame:_unityView.frame];
     // 把根视图和控制器全部换成我们自定义的内容。
-    //_rootController = floatViewController;
+    _rootController = self.floatViewController;
     _rootView = _unityView;
-    
-    //[[ScreenRecorder Instance] Init];
-    
-    //[[ScreenRecorder Instance] Start:YES];
 }
 
 @end
