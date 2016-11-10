@@ -4,11 +4,13 @@
 #import "WebKit/WebKit.h"
 #import "ReplayKitLiveView.h"
 
+#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
+#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
+
 @interface ReplayKitLiveViewController()
 
 @property (strong, nonatomic) ReplayKitLiveViewModel *liveVM;
-@property (nonatomic) IBOutlet ReplayKitLiveView *liveVMController;
-@property (nonatomic) IBOutlet ReplayKitLiveView *floatWindow;
+@property (nonatomic) IBOutlet ReplayKitLiveView *liveView;
 @property (nonatomic, weak) UIView *cameraPreview;
 
 @property (nonatomic, copy) NSURL *chatURL;
@@ -32,11 +34,11 @@
 - (void)showFloatWindow{
     self.liveVM = [[ReplayKitLiveViewModel alloc] initWithViewController:self];
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
-    _floatWindow = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(0, 100, 70, 70) mainImageName:@"zzz" imagesAndTitle:@{@"ddd":@"用户中心",@"eee":@"退出登录",@"fff":@"客服中心"} bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
-    [_floatWindow setupVMObserver:_liveVM];
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(0, kScreenWidth / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    [_liveView setupVMObserver:_liveVM];
     _liveVM.microphoneEnabled = YES;
     _liveVM.cameraEnabled = YES;
-    _floatWindow.clickBolcks = ^(FloatingButtonIndex btnIndex){
+    _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
         switch(btnIndex)
         {
             case FloatingButton_Live:
@@ -51,26 +53,22 @@
                 break;
         }
     };
-    _floatWindow.rootViewController = self;
-    [_floatWindow makeKeyAndVisible];
+    _liveView.rootViewController = self;
+    [_liveView makeKeyAndVisible];
 
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if([keyPath isEqualToString:@"living"])
     {
-        if (self.liveVM.isLiving) {
-            UIView* cameraView = [self.liveVM cameraPreview];
+        if (_liveVM.isLiving) {
+            UIView* cameraView = [_liveVM cameraPreview];
             if (self.cameraPreview != cameraView) {
-                // 防一手
                 if (self.cameraPreview.superview) {
                     [self.cameraPreview removeFromSuperview];
                 }
-                
                 NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
-                
                 self.cameraPreview = cameraView;
-                
                 if(cameraView)
                 {
                     // If the camera is enabled, create the camera preview and add it to the game's UIView

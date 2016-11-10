@@ -18,10 +18,8 @@ typedef enum
 + (UIImage *)getImageFromBundle:(NSString *)imgName;
 + (UIImage *)getImageFromBundle:(NSString *)imgName ext:(NSString*)extName;
 
-//  warning: frame的长宽必须相等
-- (instancetype)initWithFrame:(CGRect)frame mainImageName:(NSString*)name imagesAndTitle:(NSDictionary*)imagesAndTitle bgcolor:(UIColor *)bgcolor;
-// 长按雷达辐射效果
-- (instancetype)initWithFrame:(CGRect)frame mainImageName:(NSString*)name imagesAndTitle:(NSDictionary*)imagesAndTitle bgcolor:(UIColor *)bgcolor animationColor:animationColor;
+- (instancetype)initWithFrame:(CGRect)frame bgcolor:(UIColor *)bgcolor;
+- (instancetype)initWithFrame:(CGRect)frame bgcolor:(UIColor *)bgcolor animationColor:animationColor;
 
 - (BOOL)isWindowShow;
 - (void)showWindow;
