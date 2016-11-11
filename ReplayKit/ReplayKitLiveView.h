@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@interface ReplayKitLiveView : UIWindow
+@interface ReplayKitLiveView : UIView
 
 typedef enum
 {

@@ -78,7 +78,7 @@
         _isShowTab = FALSE;
 
         self.backgroundColor = [UIColor clearColor];
-        self.windowLevel = UIWindowLevelNormal + 1;
+        //self.windowLevel = UIWindowLevelNormal + 1;
         
         _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         UIImage *image = [ReplayKitLiveView getImageFromBundle:@"live_off"];
@@ -100,6 +100,7 @@
         [self addGestureRecognizer:_pan];
         //设备旋转
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientChange:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
+        [self orientChange:nil];
     }
     //_instance = self;
     return self;
@@ -267,6 +268,8 @@
             self.center = CGPointMake(self.center.x, bottom);
         }];
     }
+    [self removeGestureRecognizer:_pan];
+    [self addGestureRecognizer:_pan];
     NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
 }
 - (void)fadeoutButton:(UIButton*) btn

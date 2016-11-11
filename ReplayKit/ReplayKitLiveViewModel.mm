@@ -38,17 +38,12 @@ static ReplayKitLiveViewModel* _instance = nil;
     if (self) {
         if(nil == vc)
         {
-            _ownerViewController = [[ReplayKitLiveViewController alloc] init];
-            _ownerViewController.view.window.rootViewController = [[UnityGetGLView() window] rootViewController];
-            [UnityGetGLView() addSubview:_ownerViewController.view];
-            _ownerViewController.view.backgroundColor = [UIColor grayColor];
-            _ownerViewController.view.alpha = 0.5;
-//            CGFloat maxSize = kScreenWidth;
-//            if(maxSize < kScreenHeight)
-//            {
-//                maxSize = kScreenHeight;
-//            }
-//            _ownerViewController.view.frame = CGRectMake(0,0,maxSize,maxSize);
+            _ownerViewController = [[UnityGetGLView() window] rootViewController];
+            //_ownerViewController = [[ReplayKitLiveViewController alloc] init];
+            //_ownerViewController.view.window.rootViewController = [[UnityGetGLView() window] rootViewController];
+            //[[[UnityGetGLView() window] rootViewController] addChildViewController:_ownerViewController];
+            //[UnityGetGLView() addSubview:_ownerViewController.view];
+            //_ownerViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         }
         else
         {
@@ -79,7 +74,11 @@ static ReplayKitLiveViewModel* _instance = nil;
 
 - (void)showFloatWindow{
     self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth / 2, kScreenHeight / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [_ownerViewController.view addSubview:self.liveView];
+    //_liveView.rootViewController = _ownerViewController;
     [_liveView setupVMObserver:self];
+    //[_liveView makeKeyAndVisible];
     _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
         switch(btnIndex)
         {
@@ -95,11 +94,12 @@ static ReplayKitLiveViewModel* _instance = nil;
                 break;
         }
     };
-    _liveView.rootViewController = _ownerViewController;
-    [_ownerViewController.view addSubview:self.liveView];
-    [_liveView makeKeyAndVisible];
-    NSLog(@"_ownerViewController.view.frame.size=%f,%f", _ownerViewController.view.frame.size.width, _ownerViewController.view.frame.size.height);
-    NSLog(@"%lu", (unsigned long)_ownerViewController.supportedInterfaceOrientations);
+    //[UIViewController attemptRotationToDeviceOrientation];
+//    [_liveView dissmissWindow];
+//    [_liveView showWindow];
+//    [_liveView dissmissWindow];
+    //NSLog(@"_ownerViewController.view.frame.size=%f,%f", _ownerViewController.view.frame.size.width, _ownerViewController.view.frame.size.height);
+    //NSLog(@"%lu", (unsigned long)_ownerViewController.supportedInterfaceOrientations);
     
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context

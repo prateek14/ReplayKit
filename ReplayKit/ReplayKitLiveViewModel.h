@@ -28,13 +28,13 @@
 @property (readonly, assign, nonatomic, getter=isLiving) BOOL living;   // 查询是否正在直播，支持KVO
 @property (readonly, assign, nonatomic, getter=isPaused) BOOL paused;   // 直播是否暂停了(注意：只有正在直播才有是否暂停的状态)，支持KVO
 
-@property (strong, nonatomic) UIViewController *ownerViewController;
-@property (strong, nonatomic) ReplayKitLiveView *liveView;
+@property (strong, nonatomic, retain) UIViewController *ownerViewController;
+@property (strong, nonatomic, retain) ReplayKitLiveView *liveView;
 
 + (instancetype)Instance;
 - (instancetype)init UNAVAILABLE_ATTRIBUTE;
 - (instancetype)initWithViewController:(UIViewController *)vc NS_DESIGNATED_INITIALIZER;
-
+- (void)showFloatWindow;
 - (void)start;                                                      // 开启直播
 - (void)pause;                                                      // 暂停直播
 - (void)resume;                                                     // 恢复直播

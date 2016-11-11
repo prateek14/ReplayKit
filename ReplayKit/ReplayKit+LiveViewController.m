@@ -1,22 +1,40 @@
-#import "ReplayKit+LiveViewController.h"
-
-@implementation ReplayKitLiveViewController
-
-- (NSUInteger)supportedInterfaceOrientations
-{
-    NSUInteger ret = [[UnityGetGLView() window] rootViewController].supportedInterfaceOrientations;
-    NSLog(@"supportedInterfaceOrientations:%lul", (unsigned long)ret);
-    return ret;//(1 << UIInterfaceOrientationLandscapeLeft);
-}
-
-//- (void)viewWillAppear:(BOOL)animated
+//#import "ReplayKit+LiveViewController.h"
+//#import "ReplayKitLiveViewModel.h"
+//
+//@interface ReplayKitLiveViewController()
+//
+//@property(nonatomic,strong)UIPanGestureRecognizer *pan;
+//
+//@end
+//
+//@implementation ReplayKitLiveViewController
+//
+//- (BOOL)shouldAutorotate
 //{
-//    [super viewWillAppear:animated];
-//    [self presentViewController:[UIViewController new]
-//                       animated:NO
-//                     completion:^{
-//                         [self dismissViewControllerAnimated:NO completion:nil];
-//                     }];
+//    return YES;
 //}
-
-@end
+//- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
+//{
+//    return YES;
+//}
+//- (NSUInteger)supportedInterfaceOrientations
+//{
+//    NSUInteger ret = [[UnityGetGLView() window] rootViewController].supportedInterfaceOrientations;
+//    //NSLog(@"supportedInterfaceOrientations:%lul", (unsigned long)ret);
+//    return ret;
+//}
+//- (void)viewDidLoad
+//{
+//    //[[ReplayKitLiveViewModel Instance] showFloatWindow];
+//}
+////- (void)viewWillAppear:(BOOL)animated
+////{
+////    [super viewWillAppear:animated];
+////    [self presentViewController:[UIViewController new]
+////                       animated:NO
+////                     completion:^{
+////                         [self dismissViewControllerAnimated:NO completion:nil];
+////                     }];
+////}
+//
+//@end
