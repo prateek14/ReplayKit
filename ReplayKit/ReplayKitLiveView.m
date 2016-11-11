@@ -1,4 +1,5 @@
 #import "ReplayKitLiveView.h"
+#import "ReplayKitLiveViewModel.h"
 
 #define WIDTH self.frame.size.width
 #define HEIGHT self.frame.size.height
@@ -197,9 +198,9 @@
         }
     }
 }
-- (void)setupVMObserver:(ReplayKitLiveViewModel *)liveVM {
+- (void)setupVMObserver:(NSObject *)liveVM {
     
-    self.liveVM = liveVM;
+    self.liveVM = (ReplayKitLiveViewModel*)liveVM;
     [self.liveVM addObserver:self forKeyPath:@"cameraEnabled" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     [self.liveVM addObserver:self forKeyPath:@"microphoneEnabled" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
     [self.liveVM addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];

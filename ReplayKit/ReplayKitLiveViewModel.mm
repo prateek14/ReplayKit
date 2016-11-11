@@ -1,15 +1,17 @@
 #import "ReplayKitLiveViewModel.h"
-#import "ReplayKit/ReplayKit.h"
 #import "ReplayKit+LiveViewController.h"
+#import "WebKit/WebKit.h"
 
+#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
+#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 #define CheckStartTimeout 5
 
-@interface ReplayKitLiveViewModel()<RPBroadcastActivityViewControllerDelegate, RPBroadcastControllerDelegate>
-{
+@interface ReplayKitLiveViewModel(){
 }
-@property (weak, nonatomic) UIViewController *ownerViewController;
 @property (weak, nonatomic) RPBroadcastController *broadcastController;
 @property (strong, nonatomic) RPBroadcastController *strongBC;  // 暂停的时候强引用
+@property (nonatomic, weak) UIView *cameraPreview;
+@property (nonatomic, strong) WKWebView *chatView;
 @property (copy, nonatomic) NSURL *chatURL;
 @property (assign, nonatomic, getter=isPaused) BOOL paused;
 @property (assign, nonatomic, getter=isLiving) BOOL living;
@@ -20,11 +22,45 @@
 
 @implementation ReplayKitLiveViewModel
 
+static ReplayKitLiveViewModel* _instance = nil;
++ (instancetype)Instance
+{
+    if (_instance == nil)
+    {
+        _instance = [[ReplayKitLiveViewModel alloc] initWithViewController:nil];
+    }
+    return _instance;
+}
+
 - (instancetype)initWithViewController:(UIViewController *)vc
 {
     self = [super init];
     if (self) {
-        _ownerViewController = vc;
+        if(nil == vc)
+        {
+            _ownerViewController = [[ReplayKitLiveViewController alloc] init];
+            _ownerViewController.view.window.rootViewController = [[UnityGetGLView() window] rootViewController];
+            [UnityGetGLView() addSubview:_ownerViewController.view];
+            _ownerViewController.view.backgroundColor = [UIColor grayColor];
+            _ownerViewController.view.alpha = 0.5;
+//            CGFloat maxSize = kScreenWidth;
+//            if(maxSize < kScreenHeight)
+//            {
+//                maxSize = kScreenHeight;
+//            }
+//            _ownerViewController.view.frame = CGRectMake(0,0,maxSize,maxSize);
+        }
+        else
+        {
+            _ownerViewController = vc;
+        }
+        if(nil != _ownerViewController)
+        {
+            [self addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
+            [self showFloatWindow];
+            self.microphoneEnabled = YES;
+            self.cameraEnabled = YES;
+        }
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(checkLivingStatus)
                                                      name:UIApplicationDidBecomeActiveNotification
@@ -39,6 +75,116 @@
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)showFloatWindow{
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth / 2, kScreenHeight / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    [_liveView setupVMObserver:self];
+    _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
+        switch(btnIndex)
+        {
+            case FloatingButton_Live:
+                break;
+            case FloatingButton_Pause:
+                break;
+            case FloatingButton_Micphone:
+                break;
+            case FloatingButton_Webcam:
+                break;
+            case FloatingButton_Stop:
+                break;
+        }
+    };
+    _liveView.rootViewController = _ownerViewController;
+    [_ownerViewController.view addSubview:self.liveView];
+    [_liveView makeKeyAndVisible];
+    NSLog(@"_ownerViewController.view.frame.size=%f,%f", _ownerViewController.view.frame.size.width, _ownerViewController.view.frame.size.height);
+    NSLog(@"%lu", (unsigned long)_ownerViewController.supportedInterfaceOrientations);
+    
+}
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if([keyPath isEqualToString:@"living"])
+    {
+        if (self.isLiving) {
+            UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
+            if (self.cameraPreview != cameraView) {
+                if (self.cameraPreview.superview) {
+                    [self.cameraPreview removeFromSuperview];
+                }
+                NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
+                self.cameraPreview = cameraView;
+                if(cameraView)
+                {
+                    // If the camera is enabled, create the camera preview and add it to the game's UIView
+                    cameraView.frame = CGRectMake(0, 0, 200, 200);
+                    [self.ownerViewController.view addSubview:cameraView];
+                    {
+                        // Add a gesture recognizer so the user can drag the camera around the screen
+                        UIPanGestureRecognizer *pgr = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewPanned:)];
+                        pgr.minimumNumberOfTouches = 1;
+                        pgr.maximumNumberOfTouches = 1;
+                        [cameraView addGestureRecognizer:pgr];
+                    }
+                    {
+                        UITapGestureRecognizer *tgr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewTapped:)];
+                        [cameraView addGestureRecognizer:tgr];
+                    }
+                }
+            }
+        }
+        else {
+            self.chatURL = nil;
+            [self didCameraViewTapped:nil];
+            [self.cameraPreview removeFromSuperview];
+            self.cameraPreview = nil;
+        }
+    }
+}
+- (void)didCameraViewPanned:(UIPanGestureRecognizer*)sender
+{
+    // Move the Camera view around by dragging
+    CGPoint translation = [sender translationInView:self.ownerViewController.view];
+    {
+        CGRect recognizerFrame = sender.view.frame;
+        recognizerFrame.origin.x += translation.x;
+        recognizerFrame.origin.y += translation.y;
+        
+        sender.view.frame = recognizerFrame;
+    }
+    if(self.chatView)
+    {
+        CGRect recognizerFrame = self.chatView.frame;
+        recognizerFrame.origin.x += translation.x;
+        recognizerFrame.origin.y += translation.y;
+        
+        self.chatView.frame = recognizerFrame;
+    }
+    
+    [sender setTranslation:CGPointMake(0, 0) inView:self.ownerViewController.view];
+}
+- (void)didCameraViewTapped:(UITapGestureRecognizer*)sender
+{
+    // Load the chat view if we have a chat URL
+    if(!self.chatView && self.chatURL)
+    {
+        CGSize parentSize = self.ownerViewController.view.frame.size;
+        CGFloat ypos = CGRectGetMaxY(self.cameraPreview.frame);
+        self.chatView = [[WKWebView alloc] initWithFrame:CGRectMake(self.cameraPreview.frame.origin.x,
+                                                                    ypos,
+                                                                    300,
+                                                                    parentSize.height - ypos)];
+        NSURLRequest* request = [NSURLRequest requestWithURL:self.chatURL];
+        [self.chatView loadRequest:request];
+        [self.chatView setBackgroundColor:[UIColor grayColor]];
+        [self.chatView setOpaque:NO];
+        [self.ownerViewController.view addSubview:self.chatView];
+    }
+    else if(self.chatView)
+    {
+        [self.chatView removeFromSuperview];
+        self.chatView = nil;
+    }
 }
 
 - (void)setCameraEnabled:(BOOL)enable {
@@ -172,10 +318,6 @@
 
 - (BOOL)isLiving {
     return self.broadcastController.isBroadcasting;
-}
-
--(UIView *)cameraPreview {
-    return [RPScreenRecorder sharedRecorder].cameraPreviewView;
 }
 
 - (NSURL *)broadcastURL {
@@ -327,10 +469,10 @@
 extern "C" {
     void replaykit_startLiveBroadcast()
     {
-        [[[ReplayKitLiveViewController Instance] liveView] showWindow];
+        [[[ReplayKitLiveViewModel Instance] liveView] showWindow];
     }
     void replaykit_stopLiveBroadcast()
     {
-        [[[ReplayKitLiveViewController Instance] liveView] dissmissWindow];
+        [[[ReplayKitLiveViewModel Instance] liveView] dissmissWindow];
     }
 }

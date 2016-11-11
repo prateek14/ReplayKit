@@ -3,6 +3,7 @@
 #import "ScreenRecord.h"
 #import "ReplayKitLiveView.h"
 #import "ReplayKit+LiveViewController.h"
+#import "ReplayKitLiveViewModel.h"
 #include "UnityForwardDecls.h"
 
 // Converts C style string to NSString
@@ -147,8 +148,7 @@ static ScreenRecord* _instance;
         return;
     }
     [_previewController setModalPresentationStyle:UIModalPresentationFullScreen];
-    //[[UnityGetGLView() window] rootViewController]
-    [ReplayKitLiveViewController.Instance presentViewController:_previewController animated:YES completion:^()
+    [[[UnityGetGLView() window] rootViewController] presentViewController:_previewController animated:YES completion:^()
     {
         _previewController = nil;
     }];

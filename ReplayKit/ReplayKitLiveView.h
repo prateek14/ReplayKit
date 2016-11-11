@@ -1,5 +1,4 @@
 #import <UIKit/UIKit.h>
-#import "ReplayKitLiveViewModel.h"
 
 @interface ReplayKitLiveView : UIWindow
 
@@ -25,6 +24,6 @@ typedef enum
 - (void)showWindow;
 - (void)dissmissWindow;
 
-- (void)setupVMObserver:(ReplayKitLiveViewModel *)liveVM;
+- (void)setupVMObserver:(NSObject *)liveVM;
 
 @end

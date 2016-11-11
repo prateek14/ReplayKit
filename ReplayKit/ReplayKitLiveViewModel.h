@@ -1,4 +1,6 @@
 #import <UIKit/UIKit.h>
+#import "ReplayKit/ReplayKit.h"
+#import "ReplayKitLiveView.h"
 
 @class ReplayKitLiveViewModel;
 
@@ -12,7 +14,7 @@
 
 @end
 
-@interface ReplayKitLiveViewModel : NSObject
+@interface ReplayKitLiveViewModel : NSObject<RPBroadcastActivityViewControllerDelegate, RPBroadcastControllerDelegate>
 
 // start前可以设置的属性
 @property (weak, nonatomic) id<ReplayKitLiveViewModelDelegate> delegate;            // 代理方法
@@ -26,6 +28,10 @@
 @property (readonly, assign, nonatomic, getter=isLiving) BOOL living;   // 查询是否正在直播，支持KVO
 @property (readonly, assign, nonatomic, getter=isPaused) BOOL paused;   // 直播是否暂停了(注意：只有正在直播才有是否暂停的状态)，支持KVO
 
+@property (strong, nonatomic) UIViewController *ownerViewController;
+@property (strong, nonatomic) ReplayKitLiveView *liveView;
+
++ (instancetype)Instance;
 - (instancetype)init UNAVAILABLE_ATTRIBUTE;
 - (instancetype)initWithViewController:(UIViewController *)vc NS_DESIGNATED_INITIALIZER;
 
