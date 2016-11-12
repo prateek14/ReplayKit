@@ -51,6 +51,7 @@ static ReplayKitLiveViewModel* _instance = nil;
         }
         if(nil != _ownerViewController)
         {
+            _ownerViewController.automaticallyAdjustsScrollViewInsets = NO;
             [self addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
             [self showFloatWindow];
             self.microphoneEnabled = YES;
@@ -73,7 +74,7 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 
 - (void)showFloatWindow{
-    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth / 2, kScreenHeight / 2, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.75, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [_ownerViewController.view addSubview:self.liveView];
     //_liveView.rootViewController = _ownerViewController;
@@ -382,8 +383,21 @@ static ReplayKitLiveViewModel* _instance = nil;
 - (void)onStarted {
     NSLog(@"Live started:%@", self.broadcastController.broadcastURL);
     
-    if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
-        [self.delegate rpliveStarted];
+    if ([NSThread isMainThread])
+    {
+        if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
+            [self.delegate rpliveStarted];
+        }
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
+                [self.delegate rpliveStarted];
+            }
+            
+        });
     }
     self.living = YES;
 }
@@ -396,8 +410,21 @@ static ReplayKitLiveViewModel* _instance = nil;
         NSLog(@"Live stopped normally");
     }
     
-    if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
-        [self.delegate rpliveStoppedWithError:error];
+    if ([NSThread isMainThread])
+    {
+        if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
+            [self.delegate rpliveStoppedWithError:error];
+        }
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
+                [self.delegate rpliveStoppedWithError:error];
+            }
+            
+        });
     }
     self.living = NO;
 }
@@ -422,8 +449,20 @@ static ReplayKitLiveViewModel* _instance = nil;
 -(void)setPaused:(BOOL)paused {
     _paused = paused;
     
-    if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
-        [self.delegate rplivePaused];
+    if ([NSThread isMainThread])
+    {
+        if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
+            [self.delegate rplivePaused];
+        }
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
+                [self.delegate rplivePaused];
+            }
+        });
     }
 }
 

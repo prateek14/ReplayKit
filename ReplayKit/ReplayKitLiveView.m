@@ -99,8 +99,8 @@
         _pan.delaysTouchesBegan = NO;
         [self addGestureRecognizer:_pan];
         //设备旋转
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientChange:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
-        [self orientChange:nil];
+        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientChange:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
+        //[self orientChange:nil];
     }
     //_instance = self;
     return self;
@@ -156,46 +156,71 @@
     [self.contentView addSubview:_cameraButton];
     [self.contentView addSubview:_stopButton];
 }
-
+- (void)changeButtonImage:(UIButton*)btn img:(NSString*)imageName
+{
+    if ([NSThread isMainThread])
+    {
+        [btn setImage:[ReplayKitLiveView getImageFromBundle:imageName] forState:UIControlStateNormal];
+        [btn setNeedsDisplay];
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            [btn setImage:[ReplayKitLiveView getImageFromBundle:imageName] forState:UIControlStateNormal];
+            [btn setNeedsDisplay];
+            
+        });  
+    }
+}
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
+    //NSLog(@"observeValueForKeyPath:keyPath=%@,cameraEnabled=%d,microphoneEnabled=%d,living=%d,poaused=%d", keyPath, self.liveVM.isCameraEnabled, self.liveVM.isMicrophoneEnabled, self.liveVM.isLiving, self.liveVM.isPaused);
     if([keyPath isEqualToString:@"cameraEnabled"])
     {
         if (self.liveVM.isCameraEnabled) {
-            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
+            [self changeButtonImage:_cameraButton img:@"live_camera_on"];
+            //[self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
         }
         else {
-            [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_off"] forState:UIControlStateNormal];
+            [self changeButtonImage:_cameraButton img:@"live_camera_off"];
+            //[self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_off"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"microphoneEnabled"])
     {
         if (self.liveVM.isMicrophoneEnabled) {
-            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
+            [self changeButtonImage:_micButton img:@"live_microphone_on"];
+            //[self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
         }
         else {
-            [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_off"] forState:UIControlStateNormal];
+            [self changeButtonImage:_micButton img:@"live_microphone_off"];
+            //[self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_off"] forState:UIControlStateNormal];
         }
     }
     else if([keyPath isEqualToString:@"living"])
     {
         if (self.liveVM.isLiving) {
-            UIImage *liveImage = [ReplayKitLiveView getImageFromBundle:@"live_on"];
-            [self.liveButton setImage:liveImage forState:UIControlStateNormal];
+            [self changeButtonImage:_liveButton img:@"live_on"];
+            //UIImage *liveImage = [ReplayKitLiveView getImageFromBundle:@"live_on"];
+            //[self.liveButton setImage:liveImage forState:UIControlStateNormal];
             [self onOpenTab];
         }
         else {
-            [self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
+            [self changeButtonImage:_liveButton img:@"live_off"];
+            //[self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
             [self onCloseTab];
         }
     }
     else if([keyPath isEqualToString:@"paused"])
     {
         if (self.liveVM.isPaused) {
-            [self.pauseButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_play"] forState:UIControlStateNormal];
+            [self changeButtonImage:_pauseButton img:@"live_play"];
+            //[self.pauseButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_play"] forState:UIControlStateNormal];
         }
         else {
-            [self.pauseButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_pause"] forState:UIControlStateNormal];
+            [self changeButtonImage:_pauseButton img:@"live_pause"];
+            //[self.pauseButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_pause"] forState:UIControlStateNormal];
         }
     }
 }
@@ -270,7 +295,7 @@
     }
     [self removeGestureRecognizer:_pan];
     [self addGestureRecognizer:_pan];
-    NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
+    //NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
 }
 - (void)fadeoutButton:(UIButton*) btn
 {

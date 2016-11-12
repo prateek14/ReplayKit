@@ -187,11 +187,11 @@ extern "C"
         [[ScreenRecord Instance] discardRecording];
     }
     
-    int screenRecord_isRecording()
+    bool screenRecord_isRecording()
     {
         return [[ScreenRecord Instance] isRecording] == YES;
     }
-    int screenRecord_CanPreview()
+    bool screenRecord_CanPreview()
     {
         return [[ScreenRecord Instance] canPreview] == YES;
     }
