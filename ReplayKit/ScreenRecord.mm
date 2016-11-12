@@ -2,7 +2,6 @@
 #import <ReplayKit/ReplayKit.h>
 #import "ScreenRecord.h"
 #import "ReplayKitLiveView.h"
-#import "ReplayKit+LiveViewController.h"
 #import "ReplayKitLiveViewModel.h"
 #include "UnityForwardDecls.h"
 

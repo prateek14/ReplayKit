@@ -13,7 +13,6 @@ typedef enum
 
 @property (nonatomic,copy) void(^clickBolcks)(FloatingButtonIndex i);
 
-//+ (ReplayKitLiveView*)Instance;
 + (UIImage *)getImageFromBundle:(NSString *)imgName;
 + (UIImage *)getImageFromBundle:(NSString *)imgName ext:(NSString*)extName;
 

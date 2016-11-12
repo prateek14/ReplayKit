@@ -31,14 +31,7 @@
 
 @end
 
-//static ReplayKitLiveView* _instance = nil;
-
 @implementation ReplayKitLiveView
-
-//+ (ReplayKitLiveView*)Instance
-//{
-//    return _instance;
-//}
 
 + (UIImage *)getImageFromBundle:(NSString *)imgName{
     return [ReplayKitLiveView getImageFromBundle:imgName ext:@"png"];
@@ -55,10 +48,7 @@
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
-//    if(_instance)
-//        return _instance;
     self = [super initWithFrame:frame];
-//    _instance = self;
     if (self) {
         // Initialization code
     }
@@ -76,10 +66,7 @@
     if(self = [super initWithFrame:frame])
     {
         _isShowTab = FALSE;
-
         self.backgroundColor = [UIColor clearColor];
-        //self.windowLevel = UIWindowLevelNormal + 1;
-        
         _liveButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         UIImage *image = [ReplayKitLiveView getImageFromBundle:@"live_off"];
         [_liveButton setFrame:(CGRect){0, 0, frame.size.width, frame.size.height - (liveButtonFixWidth - liveButtonFixHeight)}];
@@ -201,15 +188,38 @@
     else if([keyPath isEqualToString:@"living"])
     {
         if (self.liveVM.isLiving) {
-            [self changeButtonImage:_liveButton img:@"live_on"];
-            //UIImage *liveImage = [ReplayKitLiveView getImageFromBundle:@"live_on"];
-            //[self.liveButton setImage:liveImage forState:UIControlStateNormal];
-            [self onOpenTab];
+            if ([NSThread isMainThread])
+            {
+                UIImage *liveImage = [ReplayKitLiveView getImageFromBundle:@"live_on"];
+                [self.liveButton setImage:liveImage forState:UIControlStateNormal];
+                [self onOpenTab];
+            }
+            else
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    //Update UI in UI thread here
+                    UIImage *liveImage = [ReplayKitLiveView getImageFromBundle:@"live_on"];
+                    [self.liveButton setImage:liveImage forState:UIControlStateNormal];
+                    [self onOpenTab];
+                    
+                });  
+            }
         }
         else {
-            [self changeButtonImage:_liveButton img:@"live_off"];
-            //[self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
-            [self onCloseTab];
+            if ([NSThread isMainThread])
+            {
+                [self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
+                [self onOpenTab];
+            }
+            else
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    //Update UI in UI thread here
+                    [self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
+                    [self onCloseTab];
+                    
+                });
+            }
         }
     }
     else if([keyPath isEqualToString:@"paused"])

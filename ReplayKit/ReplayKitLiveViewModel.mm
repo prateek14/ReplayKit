@@ -1,5 +1,4 @@
 #import "ReplayKitLiveViewModel.h"
-#import "ReplayKit+LiveViewController.h"
 #import "WebKit/WebKit.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
@@ -43,7 +42,6 @@ static ReplayKitLiveViewModel* _instance = nil;
             //_ownerViewController.view.window.rootViewController = [[UnityGetGLView() window] rootViewController];
             //[[[UnityGetGLView() window] rootViewController] addChildViewController:_ownerViewController];
             //[UnityGetGLView() addSubview:_ownerViewController.view];
-            //_ownerViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         }
         else
         {
@@ -51,7 +49,7 @@ static ReplayKitLiveViewModel* _instance = nil;
         }
         if(nil != _ownerViewController)
         {
-            _ownerViewController.automaticallyAdjustsScrollViewInsets = NO;
+            //_ownerViewController.automaticallyAdjustsScrollViewInsets = NO;
             [self addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
             [self showFloatWindow];
             self.microphoneEnabled = YES;
@@ -77,9 +75,7 @@ static ReplayKitLiveViewModel* _instance = nil;
     self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.75, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [_ownerViewController.view addSubview:self.liveView];
-    //_liveView.rootViewController = _ownerViewController;
     [_liveView setupVMObserver:self];
-    //[_liveView makeKeyAndVisible];
     _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
         switch(btnIndex)
         {
@@ -95,12 +91,6 @@ static ReplayKitLiveViewModel* _instance = nil;
                 break;
         }
     };
-    //[UIViewController attemptRotationToDeviceOrientation];
-//    [_liveView dissmissWindow];
-//    [_liveView showWindow];
-//    [_liveView dissmissWindow];
-    //NSLog(@"_ownerViewController.view.frame.size=%f,%f", _ownerViewController.view.frame.size.width, _ownerViewController.view.frame.size.height);
-    //NSLog(@"%lu", (unsigned long)_ownerViewController.supportedInterfaceOrientations);
     
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -248,12 +238,9 @@ static ReplayKitLiveViewModel* _instance = nil;
     [RPBroadcastActivityViewController loadBroadcastActivityViewControllerWithHandler:^(RPBroadcastActivityViewController * _Nullable broadcastActivityViewController, NSError * _Nullable error)
     {
         //@StrongObj(self);
-        
         if (!error) {
             broadcastActivityViewController.delegate = self;
             broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
-            //broadcastActivityViewController.view.window.windowLevel = UIWindowLevelAlert + 2;
-            NSLog(@"Selectting broadcast service, windowLevel=%f", broadcastActivityViewController.view.window.windowLevel);
             [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
         }
         else {
@@ -274,7 +261,6 @@ static ReplayKitLiveViewModel* _instance = nil;
                 self.broadcastController.delegate = nil;
             }
             self.broadcastController = broadcastController;
-            //[JCDeallocMonitor addMonitorToObj:broadcastController];
             [self doStartBroadcast];
         }
         else {
@@ -383,21 +369,8 @@ static ReplayKitLiveViewModel* _instance = nil;
 - (void)onStarted {
     NSLog(@"Live started:%@", self.broadcastController.broadcastURL);
     
-    if ([NSThread isMainThread])
-    {
-        if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
-            [self.delegate rpliveStarted];
-        }
-    }
-    else
-    {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            //Update UI in UI thread here
-            if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
-                [self.delegate rpliveStarted];
-            }
-            
-        });
+    if ([self.delegate respondsToSelector:@selector(rpliveStarted)]) {
+        [self.delegate rpliveStarted];
     }
     self.living = YES;
 }
@@ -410,21 +383,8 @@ static ReplayKitLiveViewModel* _instance = nil;
         NSLog(@"Live stopped normally");
     }
     
-    if ([NSThread isMainThread])
-    {
-        if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
-            [self.delegate rpliveStoppedWithError:error];
-        }
-    }
-    else
-    {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            //Update UI in UI thread here
-            if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
-                [self.delegate rpliveStoppedWithError:error];
-            }
-            
-        });
+    if ([self.delegate respondsToSelector:@selector(rpliveStoppedWithError:)]) {
+        [self.delegate rpliveStoppedWithError:error];
     }
     self.living = NO;
 }
@@ -449,20 +409,8 @@ static ReplayKitLiveViewModel* _instance = nil;
 -(void)setPaused:(BOOL)paused {
     _paused = paused;
     
-    if ([NSThread isMainThread])
-    {
-        if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
-            [self.delegate rplivePaused];
-        }
-    }
-    else
-    {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            //Update UI in UI thread here
-            if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
-                [self.delegate rplivePaused];
-            }
-        });
+    if ([self.delegate respondsToSelector:@selector(rplivePaused)]) {
+        [self.delegate rplivePaused];
     }
 }
 
