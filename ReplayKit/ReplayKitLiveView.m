@@ -9,8 +9,8 @@
 #define animateDuration 0.3         //位置改变动画时间
 #define showDuration 0.5            //展开动画时间
 #define margin  5                   //间隔
-#define liveButtonFixWidth 15
-#define liveButtonFixHeight 10
+#define liveButtonFixWidth 12
+#define liveButtonFixHeight 8
 
 @interface ReplayKitLiveView()
 
@@ -23,6 +23,10 @@
 @property (strong, nonatomic) UIButton *cameraButton;
 @property (strong, nonatomic) UIButton *stopButton;
 
+@property(nonatomic)CGFloat pauseButtonPosX;
+@property(nonatomic)CGFloat micButtonPosX;
+@property(nonatomic)CGFloat cameraButtonPosX;
+@property(nonatomic)CGFloat stopButtonPosX;
 @property(nonatomic)BOOL  isShowTab;
 @property(nonatomic)BOOL  isLiveButtonInLeft;
 @property(nonatomic,strong)UIPanGestureRecognizer *pan;
@@ -112,16 +116,22 @@
     [self.background setFrame: CGRectMake(0, 0, _liveButton.frame.size.width, _contentView.frame.size.height)];
     [self.contentView addSubview:_background];
     
-    CGFloat startPosX = _liveButton.frame.size.width;
     self.pauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.micButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.cameraButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.stopButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
-    [self.pauseButton setFrame: CGRectMake(startPosX, 0, width, width)];
-    [self.micButton setFrame: CGRectMake(startPosX + width + margin, 0, width, width)];
-    [self.cameraButton setFrame: CGRectMake(startPosX + (width + margin) * 2, 0, width, width)];
-    [self.stopButton setFrame: CGRectMake(startPosX + (width + margin) * 3, 0, width, width)];
+    CGFloat startPosX = _liveButton.frame.size.width;
+    _pauseButtonPosX = startPosX;
+    _micButtonPosX = startPosX + width + margin;
+    _cameraButtonPosX = startPosX + (width + margin) * 2;
+    _stopButtonPosX = startPosX + (width + margin) * 3;
+    
+    CGFloat min = -(_contentWidth - _liveButton.frame.size.width) * 0.5;
+    _pauseButton.frame = CGRectMake(min, 0, width, width);
+    _micButton.frame = CGRectMake(min, 0, width, width);
+    _cameraButton.frame = CGRectMake(min, 0, width, width);
+    _stopButton.frame = CGRectMake(min, 0, width, width);
     
     [self.cameraButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_camera_on"] forState:UIControlStateNormal];
     [self.micButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_microphone_on"] forState:UIControlStateNormal];
@@ -303,17 +313,27 @@
             self.center = CGPointMake(self.center.x, bottom);
         }];
     }
-    [self removeGestureRecognizer:_pan];
-    [self addGestureRecognizer:_pan];
+    //[self removeGestureRecognizer:_pan];
+    //[self addGestureRecognizer:_pan];
     //NSLog(@"self.center=%f,%f", self.center.x,self.center.y);
 }
-- (void)fadeoutButton:(UIButton*) btn
+
+- (void)fadeoutButtons
 {
-    
+    CGFloat width = WIDTH - liveButtonFixWidth;
+    CGFloat min = -(_contentWidth - _liveButton.frame.size.width) * 0.5;
+    _pauseButton.frame = CGRectMake(min, min, width, width);
+    _micButton.frame = CGRectMake(min, min, width, width);
+    _cameraButton.frame = CGRectMake(min, min, width, width);
+    _stopButton.frame = CGRectMake(min, min, width, width);
 }
-- (void)fadeinButton:(UIButton*) btn
+- (void)fadeinButtons
 {
-    
+    CGFloat width = WIDTH - liveButtonFixWidth;
+    _pauseButton.frame = CGRectMake(_pauseButtonPosX, 0, width, width);
+    _micButton.frame = CGRectMake(_micButtonPosX, 0, width, width);
+    _cameraButton.frame = CGRectMake(_cameraButtonPosX, 0, width, width);
+    _stopButton.frame = CGRectMake(_stopButtonPosX, 0, width, width);
 }
 - (void)onCloseTab
 {
@@ -323,10 +343,10 @@
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha = 0;
         CGSize buttonSize = self.liveButton.frame.size;
-        self.liveButton.frame = CGRectMake(0, 0, buttonSize.width, buttonSize.height);
+        [self fadeoutButtons];
+        _liveButton.frame = CGRectMake(0, 0, buttonSize.width, buttonSize.height);
         _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, 0, buttonSize.width - liveButtonFixWidth);
         _background.frame = CGRectMake(0, 0, buttonSize.width, _contentView.frame.size.height);
-        
         if (_isLiveButtonInLeft) {
             self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, HEIGHT, HEIGHT);
         }else{
@@ -343,19 +363,20 @@
     [UIView animateWithDuration:showDuration animations:^{
         _contentView.alpha = 1;
         CGSize buttonSize = self.liveButton.frame.size;
-        if (self.frame.origin.x <= kScreenWidth/2) {
+        [self fadeinButtons];
+        _isLiveButtonInLeft = self.frame.origin.x <= kScreenWidth/2;
+        if (_isLiveButtonInLeft) {
             //按钮在屏幕左边时，contentview恢复默认
             _contentView.frame = CGRectMake(margin, liveButtonFixHeight / 2, _contentWidth, buttonSize.width - liveButtonFixWidth);
             _background.frame = CGRectMake(0, 0, _contentWidth, _contentView.frame.size.height);
             _liveButton.frame = CGRectMake(0, 0, buttonSize.width, buttonSize.height);
             self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, _contentWidth, HEIGHT);
-            _isLiveButtonInLeft = YES;
         }else{
             //按钮在屏幕右边时，左移contentview
             _contentView.frame = CGRectMake(-(buttonSize.width + 2 * margin), liveButtonFixHeight / 2, _contentWidth, buttonSize.width - liveButtonFixWidth);
             _background.frame = CGRectMake(buttonSize.width, 0, _contentWidth, _contentView.frame.size.height);
             _liveButton.frame = CGRectMake(_contentWidth - buttonSize.width - 2 * margin, 0, buttonSize.width, buttonSize.height);
-            self.frame = CGRectMake(self.frame.origin.x - _contentWidth / 2 - 2 * margin - buttonSize.width, self.frame.origin.y, _contentWidth, HEIGHT);
+            self.frame = CGRectMake(self.frame.origin.x - _contentWidth / 2 - buttonSize.width - margin, self.frame.origin.y, _contentWidth, HEIGHT);
             _isLiveButtonInLeft = NO;
         }
     }];
