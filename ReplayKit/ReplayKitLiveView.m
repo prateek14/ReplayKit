@@ -219,7 +219,7 @@
             if ([NSThread isMainThread])
             {
                 [self.liveButton setImage:[ReplayKitLiveView getImageFromBundle:@"live_off"] forState:UIControlStateNormal];
-                [self onOpenTab];
+                [self onCloseTab];
             }
             else
             {
