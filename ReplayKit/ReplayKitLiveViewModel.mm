@@ -194,6 +194,7 @@ static ReplayKitLiveViewModel* _instance = nil;
             }
             else {
                 NSLog(@"User not allow camera access");
+                [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
             }
             [self didChangeValueForKey:@"cameraEnabled"];
         }];
@@ -222,6 +223,7 @@ static ReplayKitLiveViewModel* _instance = nil;
             }
             else {
                 NSLog(@"User not allow microphone access");
+                [RPScreenRecorder sharedRecorder].microphoneEnabled = NO;
             }
             [self didChangeValueForKey:@"microphoneEnabled"];
         }];
@@ -238,16 +240,14 @@ static ReplayKitLiveViewModel* _instance = nil;
         NSLog(@"It is broadcasting...");
         return ;
     }
-    
     NSAssert(_ownerViewController, @"没有控制器玩不了...");
-    
     //@WeakObj(self)
     [RPBroadcastActivityViewController loadBroadcastActivityViewControllerWithHandler:^(RPBroadcastActivityViewController * _Nullable broadcastActivityViewController, NSError * _Nullable error)
     {
         //@StrongObj(self);
         if (!error) {
             broadcastActivityViewController.delegate = self;
-            //broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+            broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
             [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
         }
         else {
@@ -291,7 +291,7 @@ static ReplayKitLiveViewModel* _instance = nil;
         //[self releaseCheckStartTimer];
     }];
     //[self createCheckStartTimer];
-    [self start];
+    //[self start];
 }
 
 //- (void)createCheckStartTimer {

@@ -22,7 +22,7 @@
 @property (assign, nonatomic, getter=isMicrophoneEnabled) BOOL microphoneEnabled;   // 开启麦克风(内部自动提示获取权限)，同时反映权限状态，支持KVO
 
 // start之后可以访问的属性、可以监听的状态变化
-@property (readonly, weak, nonatomic) UIView *cameraPreview;            // 摄像头的预览画面
+//@property (readonly, weak, nonatomic) UIView *cameraPreview;            // 摄像头的预览画面
 @property (readonly, copy, nonatomic) NSURL *broadcastURL;              // 用来分享的直播地址
 @property (readonly, copy, nonatomic) NSURL *chatURL;                   // 用来展示聊天的URL地址，支持KVO
 @property (readonly, assign, nonatomic, getter=isLiving) BOOL living;   // 查询是否正在直播，支持KVO
