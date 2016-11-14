@@ -3,19 +3,19 @@
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-#define CheckStartTimeout 5
+//#define CheckStartTimeout 5
 
 @interface ReplayKitLiveViewModel(){
 }
 @property (weak, nonatomic) RPBroadcastController *broadcastController;
 @property (strong, nonatomic) RPBroadcastController *strongBC;  // 暂停的时候强引用
-@property (nonatomic, weak) UIView *cameraPreview;
+//@property (nonatomic, weak) UIView *cameraPreview;
 @property (nonatomic, strong) WKWebView *chatView;
 @property (copy, nonatomic) NSURL *chatURL;
 @property (assign, nonatomic, getter=isPaused) BOOL paused;
 @property (assign, nonatomic, getter=isLiving) BOOL living;
 
-@property (weak, nonatomic) NSTimer *startCheckTimer;
+//@property (weak, nonatomic) NSTimer *startCheckTimer;
 @end
 
 
@@ -72,7 +72,7 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 
 - (void)showFloatWindow{
-    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.75, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.6, 60, 60) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [_ownerViewController.view addSubview:self.liveView];
     [_liveView setupVMObserver:self];
@@ -99,14 +99,17 @@ static ReplayKitLiveViewModel* _instance = nil;
     {
         if (self.isLiving) {
             UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
-            if (self.cameraPreview != cameraView) {
-                if (self.cameraPreview.superview) {
-                    [self.cameraPreview removeFromSuperview];
-                }
-                NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
-                self.cameraPreview = cameraView;
+//            if (self.cameraPreview != cameraView) {
+//                if (self.cameraPreview.superview) {
+//                    [self.cameraPreview removeFromSuperview];
+//                }
+//                NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
+//                self.cameraPreview = cameraView;
                 if(cameraView)
                 {
+                    if (cameraView.superview) {
+                        [cameraView removeFromSuperview];
+                    }
                     // If the camera is enabled, create the camera preview and add it to the game's UIView
                     cameraView.frame = CGRectMake(0, 0, 200, 200);
                     [self.ownerViewController.view addSubview:cameraView];
@@ -122,13 +125,16 @@ static ReplayKitLiveViewModel* _instance = nil;
                         [cameraView addGestureRecognizer:tgr];
                     }
                 }
-            }
+//            }
         }
         else {
+            UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
             self.chatURL = nil;
             [self didCameraViewTapped:nil];
-            [self.cameraPreview removeFromSuperview];
-            self.cameraPreview = nil;
+            if(cameraView)
+                [cameraView removeFromSuperview];
+            //[self.cameraPreview removeFromSuperview];
+            //self.cameraPreview = nil;
         }
     }
 }
@@ -157,11 +163,12 @@ static ReplayKitLiveViewModel* _instance = nil;
 - (void)didCameraViewTapped:(UITapGestureRecognizer*)sender
 {
     // Load the chat view if we have a chat URL
-    if(!self.chatView && self.chatURL)
+    UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
+    if(!self.chatView && self.chatURL && cameraView)
     {
         CGSize parentSize = self.ownerViewController.view.frame.size;
-        CGFloat ypos = CGRectGetMaxY(self.cameraPreview.frame);
-        self.chatView = [[WKWebView alloc] initWithFrame:CGRectMake(self.cameraPreview.frame.origin.x,
+        CGFloat ypos = CGRectGetMaxY(cameraView.frame);
+        self.chatView = [[WKWebView alloc] initWithFrame:CGRectMake(cameraView.frame.origin.x,
                                                                     ypos,
                                                                     300,
                                                                     parentSize.height - ypos)];
@@ -240,7 +247,7 @@ static ReplayKitLiveViewModel* _instance = nil;
         //@StrongObj(self);
         if (!error) {
             broadcastActivityViewController.delegate = self;
-            broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+            //broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
             [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
         }
         else {
@@ -281,27 +288,28 @@ static ReplayKitLiveViewModel* _instance = nil;
         else {
             [self onStopped:error];
         }
-        [self releaseCheckStartTimer];
+        //[self releaseCheckStartTimer];
     }];
-    [self createCheckStartTimer];
+    //[self createCheckStartTimer];
+    [self start];
 }
 
-- (void)createCheckStartTimer {
-    //@WeakObj(self);
-    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
-        //@StrongObj(self);
-        // auto retry
-        NSLog(@"Start timeout, auto retry...");
-        [self start];
-    }];
-}
+//- (void)createCheckStartTimer {
+//    //@WeakObj(self);
+//    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+//        //@StrongObj(self);
+//        // auto retry
+//        NSLog(@"Start timeout, auto retry...");
+//        [self start];
+//    }];
+//}
 
-- (void)releaseCheckStartTimer {
-    if (_startCheckTimer) {
-        [_startCheckTimer invalidate];
-        _startCheckTimer = nil;
-    }
-}
+//- (void)releaseCheckStartTimer {
+//    if (_startCheckTimer) {
+//        [_startCheckTimer invalidate];
+//        _startCheckTimer = nil;
+//    }
+//}
 
 - (BOOL)isLiving {
     return self.broadcastController.isBroadcasting;
@@ -454,6 +462,12 @@ static ReplayKitLiveViewModel* _instance = nil;
 
 
 extern "C" {
+    bool replaykit_isLiveAvailable()
+    {
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0)
+            return true;
+        return false;
+    }
     void replaykit_startLiveBroadcast()
     {
         [[[ReplayKitLiveViewModel Instance] liveView] showWindow];

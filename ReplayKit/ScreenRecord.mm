@@ -59,10 +59,6 @@ static ScreenRecord* _instance;
 
 - (void)startRecording
 {
-    if([self isRecording])
-    {
-        return;
-    }
     RPScreenRecorder* recorder = [RPScreenRecorder sharedRecorder];
     if (recorder == nil)
     {
@@ -71,37 +67,14 @@ static ScreenRecord* _instance;
     }
     [recorder setDelegate:self];
     [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
-        
-        if ([NSThread isMainThread])
+        if (error == nil)
         {
-            if (error == nil)
-            {
-                NSLog(@"ScreenRecord_StartRecordingComplete1");
-                [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:nil];
-                return;
-            }
-            else
-            {
-                NSLog(@"ScreenRecord_StartRecordingComplete2");
-                [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:[error description]];
-            }
+            [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:nil];
+            return;
         }
         else
         {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                //Update UI in UI thread here
-                if (error == nil)
-                {
-                    NSLog(@"ScreenRecord_StartRecordingComplete1");
-                    [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:nil];
-                    return;
-                }
-                else
-                {
-                    NSLog(@"ScreenRecord_StartRecordingComplete2");
-                    [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:[error description]];
-                }
-            });
+            [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:[error description]];
         }
     }];
     NSLog(@"startRecording done");
@@ -109,10 +82,6 @@ static ScreenRecord* _instance;
 
 - (void)stopRecording
 {
-    if(![self isRecording])
-    {
-        return;
-    }
     RPScreenRecorder* recorder = [RPScreenRecorder sharedRecorder];
     if (recorder == nil)
     {
@@ -120,44 +89,19 @@ static ScreenRecord* _instance;
         return;
     }
     [recorder stopRecordingWithHandler:^(RPPreviewViewController * _Nullable previewViewController, NSError * _Nullable error) {
-        if ([NSThread isMainThread])
+        if (error != nil)
         {
-            if (error != nil)
-            {
-                NSLog(@"ScreenRecorder_StopRecordingComplete1");
-                [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:[error description]];
-                return;
-            }
-            if (previewViewController != nil)
-            {
-                [previewViewController setPreviewControllerDelegate:self];
-                _previewController = previewViewController;
-            }
-            NSLog(@"ScreenRecorder_StopRecordingComplete2");
-            [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:nil];
-            [self preview];
+            [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:[error description]];
+            return;
         }
-        else
+        
+        if (previewViewController != nil)
         {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                //Update UI in UI thread here
-                if (error != nil)
-                {
-                    NSLog(@"ScreenRecorder_StopRecordingComplete1");
-                    [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:[error description]];
-                    return;
-                }
-                if (previewViewController != nil)
-                {
-                    [previewViewController setPreviewControllerDelegate:self];
-                    _previewController = previewViewController;
-                }
-                NSLog(@"ScreenRecorder_StopRecordingComplete2");
-                [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:nil];
-                [self preview];
-                
-            });
+            [previewViewController setPreviewControllerDelegate:self];
+            _previewController = previewViewController;
         }
+        [self sendMessage:@"ScreenRecorder_StopRecordingComplete" msg:nil];
+        [self preview];
     }];
     
     NSLog(@"stopRecording done");
@@ -202,25 +146,21 @@ static ScreenRecord* _instance;
     {
         return;
     }
-    //[_previewController setModalPresentationStyle:UIModalPresentationFullScreen];
+    [_previewController setModalPresentationStyle:UIModalPresentationFullScreen];
     [[[UnityGetGLView() window] rootViewController] presentViewController:_previewController animated:YES completion:^()
     {
-        NSLog(@"presentViewController _previewController!!!");
         //_previewController = nil;
     }];
 }
 
 - (void)screenRecorder:(nonnull RPScreenRecorder*)screenRecorder didStopRecordingWithError:(nonnull NSError*)error previewViewController:(nullable RPPreviewViewController*)previewViewController
 {
-    NSLog(@"didStopRecordingWithError:%@-%@", _previewController, previewViewController);
-    NSLog(@"didStopRecordingWithError:%@", error);
     _previewController = previewViewController;
     [self sendMessage:@"ScreenRecorder_DidStopRecordingWithError" msg:[error description]];
 }
 
 - (void)previewControllerDidFinish:(nonnull RPPreviewViewController*)previewController
 {
-    NSLog(@"previewControllerDidFinish:%@", previewController);
     [previewController dismissViewControllerAnimated:YES completion:nil];
     [self sendMessage:@"ScreenRecorder_PreviewControllerDidFinish" msg:nil];
 }
