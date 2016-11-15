@@ -3,7 +3,7 @@
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-#define CheckStartTimeout 2
+#define CheckStartTimeout 0.5
 
 @interface ReplayKitLiveViewModel(){
 }
@@ -23,6 +23,7 @@
 @implementation ReplayKitLiveViewModel
 
 static ReplayKitLiveViewModel* _instance = nil;
+static bool _firstStart = true;
 + (instancetype)Instance
 {
     if (_instance == nil)
@@ -72,7 +73,7 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 
 - (void)showFloatWindow{
-    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.6, 60, 60) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
+    self.liveView = [[ReplayKitLiveView alloc]initWithFrame:CGRectMake(kScreenWidth * 0.25, kScreenHeight * 0.6, 70, 70) bgcolor:[UIColor clearColor] animationColor:[UIColor purpleColor]];
     _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [_ownerViewController.view addSubview:self.liveView];
     [_liveView setupVMObserver:self];
@@ -318,22 +319,13 @@ static ReplayKitLiveViewModel* _instance = nil;
         if (!error) {
             self.activityViewController = broadcastActivityViewController;
             _activityViewController.delegate = self;
-            _activityViewController.modalPresentationStyle = UIModalPresentationPopover;
-            if ([NSThread isMainThread])
-            {
-//                [self.ownerViewController presentViewController:_activityViewController animated:YES completion:^{
-//                }];
-                [self.ownerViewController.view addSubview:broadcastActivityViewController.view];
-            }
-            else
-            {
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    //Update UI in UI thread here
-//                    [self.ownerViewController presentViewController:_activityViewController animated:YES completion:^{
-//                    }];
-                    [self.ownerViewController.view addSubview:broadcastActivityViewController.view];
-                });
-            }
+            _activityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+            [self.ownerViewController presentViewController:_activityViewController animated:YES completion:^{
+                CGRect frame = _activityViewController.view.frame;
+                _activityViewController.view.frame = CGRectMake(0, frame.size.height, frame.size.width, frame.size.height);
+                _activityViewController.view.alpha = 0;
+                [self createCheckStartTimer];
+            }];
         }
         else {
             [self onStopped:error];
@@ -343,18 +335,7 @@ static ReplayKitLiveViewModel* _instance = nil;
 
 - (void)broadcastActivityViewController:(RPBroadcastActivityViewController *)broadcastActivityViewController didFinishWithBroadcastController:(nullable RPBroadcastController *)broadcastController error:(nullable NSError *)error
 {
-    if ([NSThread isMainThread])
-    {
-        [broadcastActivityViewController.view removeFromSuperview];
-    }
-    else
-    {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            //Update UI in UI thread here
-            [broadcastActivityViewController.view removeFromSuperview];
-        });
-    }
-    //[broadcastActivityViewController dismissViewControllerAnimated:YES completion:^{
+    [broadcastActivityViewController dismissViewControllerAnimated:YES completion:^{
         if (!error) {
             // 如果之前竟然还有一个RPBroadcastController, 先解除上一个对象的代理
             if (self.broadcastController) {
@@ -367,7 +348,7 @@ static ReplayKitLiveViewModel* _instance = nil;
         else {
             [self onStopped:error];
         }
-    //}];
+    }];
 }
 
 - (void)doStartBroadcast {
@@ -380,26 +361,33 @@ static ReplayKitLiveViewModel* _instance = nil;
         else {
             [self onStopped:error];
         }
-        //[self releaseCheckStartTimer];
+        [self releaseCheckStartTimer];
     }];
     //[self createCheckStartTimer];
 }
 
-//- (void)createCheckStartTimer {
-//    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:YES block:^(NSTimer * _Nonnull timer) {
-//        // auto retry
-//        NSLog(@"Start timeout, auto retry...");
-//        //[self start];
-//        //[self.ownerViewController presentViewController:_activityViewController animated:YES completion:nil];
-//    }];
-//}
-//
-//- (void)releaseCheckStartTimer {
-//    if (_startCheckTimer) {
-//        [_startCheckTimer invalidate];
-//        _startCheckTimer = nil;
-//    }
-//}
+- (void)createCheckStartTimer {
+    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
+        // auto retry
+        NSLog(@"Start timeout, auto retry...");
+        //[self start];
+        NSLog(@"1(%f,%f,%f,%f),%f,%@", _activityViewController.view.frame.origin.x, _activityViewController.view.frame.origin.y, _activityViewController.view.frame.size.width, _activityViewController.view.frame.size
+              .height, _activityViewController.view.alpha, _activityViewController.view.backgroundColor);
+        [UIView animateWithDuration:0.3 animations:^{
+            CGRect frame = _activityViewController.view.frame;
+            _activityViewController.view.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+            _activityViewController.view.alpha = 1;
+        }];
+        [self releaseCheckStartTimer];
+    }];
+}
+
+- (void)releaseCheckStartTimer {
+    if (_startCheckTimer) {
+        [_startCheckTimer invalidate];
+        _startCheckTimer = nil;
+    }
+}
 
 - (BOOL)isLiving {
     return self.broadcastController.isBroadcasting;
@@ -571,7 +559,7 @@ static ReplayKitLiveViewModel* _instance = nil;
 extern "C" {
     bool replaykit_isLiveAvailable()
     {
-        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0)
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone && [[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0)
             return true;
         return false;
     }

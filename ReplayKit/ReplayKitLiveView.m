@@ -9,8 +9,8 @@
 #define animateDuration 0.3         //位置改变动画时间
 #define showDuration 0.5            //展开动画时间
 #define margin  5                   //间隔
-#define liveButtonFixWidth 12
-#define liveButtonFixHeight 8
+#define liveButtonFixWidth 15
+#define liveButtonFixHeight 10
 
 @interface ReplayKitLiveView()
 
