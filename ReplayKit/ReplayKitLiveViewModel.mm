@@ -259,14 +259,6 @@ static ReplayKitLiveViewModel* _instance = nil;
 - (void)setCameraEnabled:(BOOL)enable {
     if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
         return;
-    if(nil == self.cameraPreview)
-    {
-        [self willChangeValueForKey:@"cameraEnabled"];
-        [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
-        [self didChangeValueForKey:@"cameraEnabled"];
-    }
-    else
-    {
         if (enable) {
             [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
             [self willChangeValueForKey:@"cameraEnabled"];
@@ -288,7 +280,6 @@ static ReplayKitLiveViewModel* _instance = nil;
             [self switchCameraPreview:NO];
             [self didChangeValueForKey:@"cameraEnabled"];
         }
-    }
 }
 
 - (BOOL)isCameraEnabled {
