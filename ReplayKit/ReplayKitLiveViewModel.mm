@@ -9,7 +9,7 @@
 }
 @property (weak, nonatomic) RPBroadcastController *broadcastController;
 @property (strong, nonatomic) RPBroadcastController *strongBC;  // 暂停的时候强引用
-//@property (nonatomic, weak) UIView *cameraPreview;
+@property (nonatomic, weak) UIView *cameraPreview;
 @property (nonatomic, strong) WKWebView *chatView;
 @property (copy, nonatomic) NSURL *chatURL;
 @property (assign, nonatomic, getter=isPaused) BOOL paused;
@@ -114,7 +114,9 @@ static ReplayKitLiveViewModel* _instance = nil;
             [cameraView removeFromSuperview];
         }
         // If the camera is enabled, create the camera preview and add it to the game's UIView
-        cameraView.frame = CGRectMake(0, 0, 200, 200);
+        [UIView animateWithDuration:0.2 animations:^{
+            cameraView.frame = CGRectMake(0, 0, 200, 200);
+        }];
         [self.ownerViewController.view addSubview:cameraView];
         {
             // Add a gesture recognizer so the user can drag the camera around the screen
@@ -127,6 +129,7 @@ static ReplayKitLiveViewModel* _instance = nil;
             UITapGestureRecognizer *tgr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewTapped:)];
             [cameraView addGestureRecognizer:tgr];
         }
+        self.cameraPreview = cameraView;
     }
     //            }
 }
@@ -137,13 +140,18 @@ static ReplayKitLiveViewModel* _instance = nil;
         self.chatURL = nil;
         return;
     }
-    UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
+    //UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
     self.chatURL = nil;
     [self didCameraViewTapped:nil];
-    if(cameraView)
-        [cameraView removeFromSuperview];
+    if(self.cameraPreview)
+    {
+        [UIView animateWithDuration:0.2 animations:^{
+            self.cameraPreview.frame = CGRectMake(0, 0, 0, 0);
+        }];
+        [self.cameraPreview removeFromSuperview];
+        self.cameraPreview = nil;
+    }
     //[self.cameraPreview removeFromSuperview];
-    //self.cameraPreview = nil;
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
@@ -528,12 +536,24 @@ extern "C" {
             return true;
         return false;
     }
+    bool replaykit_isWindowShowing()
+    {
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+            return false;
+        if([ReplayKitLiveViewModel Instance].liveView)
+            return [[ReplayKitLiveViewModel Instance].liveView isWindowShow] == YES;
+        return false;
+    }
     void replaykit_startLiveBroadcast()
     {
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+            return;
         [[[ReplayKitLiveViewModel Instance] liveView] showWindow];
     }
     void replaykit_stopLiveBroadcast()
     {
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+            return;
         [[[ReplayKitLiveViewModel Instance] liveView] dissmissWindow];
     }
 }
