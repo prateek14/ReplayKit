@@ -95,7 +95,7 @@ static ReplayKitLiveViewModel* _instance = nil;
                 break;
         }
     };
-    
+    [_liveView dissmissWindow];
 }
 - (void)enterLive
 {
@@ -114,8 +114,8 @@ static ReplayKitLiveViewModel* _instance = nil;
             [cameraView removeFromSuperview];
         }
         // If the camera is enabled, create the camera preview and add it to the game's UIView
-        [UIView animateWithDuration:0.2 animations:^{
-            cameraView.frame = CGRectMake(0, 0, 200, 200);
+        [UIView animateWithDuration:0.5 animations:^{
+            cameraView.frame = CGRectMake(50, 50, 200, 200);
         }];
         [self.ownerViewController.view addSubview:cameraView];
         {
@@ -145,9 +145,6 @@ static ReplayKitLiveViewModel* _instance = nil;
     [self didCameraViewTapped:nil];
     if(self.cameraPreview)
     {
-        [UIView animateWithDuration:0.2 animations:^{
-            self.cameraPreview.frame = CGRectMake(0, 0, 0, 0);
-        }];
         [self.cameraPreview removeFromSuperview];
         self.cameraPreview = nil;
     }
@@ -231,27 +228,66 @@ static ReplayKitLiveViewModel* _instance = nil;
         self.chatView = nil;
     }
 }
-
+- (void)switchCameraPreview:(BOOL)show
+{
+    if(nil == self.cameraPreview)
+        return;
+    if ([NSThread isMainThread])
+    {
+        CGRect frame = self.cameraPreview.frame;
+        [UIView animateWithDuration:0.5 animations:^{
+            if(show)
+                self.cameraPreview.frame = CGRectMake(frame.origin.x, frame.origin.y, 200, 200);
+            else
+                self.cameraPreview.frame = CGRectMake(frame.origin.x, frame.origin.y, 0, 0);
+        }];
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            CGRect frame = self.cameraPreview.frame;
+            [UIView animateWithDuration:0.5 animations:^{
+                if(show)
+                    self.cameraPreview.frame = CGRectMake(frame.origin.x, frame.origin.y, 200, 200);
+                else
+                    self.cameraPreview.frame = CGRectMake(frame.origin.x, frame.origin.y, 0, 0);
+            }];
+        });
+    }
+}
 - (void)setCameraEnabled:(BOOL)enable {
     if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
         return;
-    if (enable) {
-        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-            [self willChangeValueForKey:@"cameraEnabled"];
-            if (granted) {
-                [RPScreenRecorder sharedRecorder].cameraEnabled = YES;
-            }
-            else {
-                NSLog(@"User not allow camera access");
-                [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
-            }
-            [self didChangeValueForKey:@"cameraEnabled"];
-        }];
-    }
-    else {
+    if(nil == self.cameraPreview)
+    {
         [self willChangeValueForKey:@"cameraEnabled"];
         [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
         [self didChangeValueForKey:@"cameraEnabled"];
+    }
+    else
+    {
+        if (enable) {
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            [self willChangeValueForKey:@"cameraEnabled"];
+            if (granted) {
+                    [RPScreenRecorder sharedRecorder].cameraEnabled = YES;
+                    [self switchCameraPreview:YES];
+                }
+                else {
+                    NSLog(@"User not allow camera access");
+                    [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
+                    [self switchCameraPreview:NO];
+                }
+                [self didChangeValueForKey:@"cameraEnabled"];
+            }];
+        }
+        else {
+            [self willChangeValueForKey:@"cameraEnabled"];
+            [RPScreenRecorder sharedRecorder].cameraEnabled = NO;
+            [self switchCameraPreview:NO];
+            [self didChangeValueForKey:@"cameraEnabled"];
+        }
     }
 }
 
