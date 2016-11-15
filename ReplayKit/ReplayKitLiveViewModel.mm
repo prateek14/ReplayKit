@@ -99,6 +99,8 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 - (void)enterLive
 {
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+        return;
     UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
     //            if (self.cameraPreview != cameraView) {
     //                if (self.cameraPreview.superview) {
@@ -130,6 +132,11 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 - (void)exitLive
 {
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+    {
+        self.chatURL = nil;
+        return;
+    }
     UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
     self.chatURL = nil;
     [self didCameraViewTapped:nil];
@@ -218,6 +225,8 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 
 - (void)setCameraEnabled:(BOOL)enable {
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+        return;
     if (enable) {
         [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
             [self willChangeValueForKey:@"cameraEnabled"];
@@ -239,6 +248,8 @@ static ReplayKitLiveViewModel* _instance = nil;
 }
 
 - (BOOL)isCameraEnabled {
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+        return false;
     return [RPScreenRecorder sharedRecorder].isCameraEnabled;
 }
 
