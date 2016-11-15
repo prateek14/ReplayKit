@@ -3,10 +3,11 @@
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-//#define CheckStartTimeout 5
+#define CheckStartTimeout 2
 
 @interface ReplayKitLiveViewModel(){
 }
+@property (weak, nonatomic) RPBroadcastActivityViewController *activityViewController;
 @property (weak, nonatomic) RPBroadcastController *broadcastController;
 @property (strong, nonatomic) RPBroadcastController *strongBC;  // 暂停的时候强引用
 @property (nonatomic, weak) UIView *cameraPreview;
@@ -15,7 +16,7 @@
 @property (assign, nonatomic, getter=isPaused) BOOL paused;
 @property (assign, nonatomic, getter=isLiving) BOOL living;
 
-//@property (weak, nonatomic) NSTimer *startCheckTimer;
+@property (weak, nonatomic) NSTimer *startCheckTimer;   // 有时live询问弹窗不会弹出或弹出很慢，需要定时查询
 @end
 
 
@@ -38,10 +39,6 @@ static ReplayKitLiveViewModel* _instance = nil;
         if(nil == vc)
         {
             _ownerViewController = [[UnityGetGLView() window] rootViewController];
-            //_ownerViewController = [[ReplayKitLiveViewController alloc] init];
-            //_ownerViewController.view.window.rootViewController = [[UnityGetGLView() window] rootViewController];
-            //[[[UnityGetGLView() window] rootViewController] addChildViewController:_ownerViewController];
-            //[UnityGetGLView() addSubview:_ownerViewController.view];
         }
         else
         {
@@ -49,7 +46,6 @@ static ReplayKitLiveViewModel* _instance = nil;
         }
         if(nil != _ownerViewController)
         {
-            //_ownerViewController.automaticallyAdjustsScrollViewInsets = NO;
             [self addObserver:self forKeyPath:@"living" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:NULL];
             [self showFloatWindow];
             self.microphoneEnabled = YES;
@@ -80,21 +76,21 @@ static ReplayKitLiveViewModel* _instance = nil;
     _liveView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [_ownerViewController.view addSubview:self.liveView];
     [_liveView setupVMObserver:self];
-    _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
-        switch(btnIndex)
-        {
-            case FloatingButton_Live:
-                break;
-            case FloatingButton_Pause:
-                break;
-            case FloatingButton_Micphone:
-                break;
-            case FloatingButton_Webcam:
-                break;
-            case FloatingButton_Stop:
-                break;
-        }
-    };
+//    _liveView.clickBolcks = ^(FloatingButtonIndex btnIndex){
+//        switch(btnIndex)
+//        {
+//            case FloatingButton_Live:
+//                break;
+//            case FloatingButton_Pause:
+//                break;
+//            case FloatingButton_Micphone:
+//                break;
+//            case FloatingButton_Webcam:
+//                break;
+//            case FloatingButton_Stop:
+//                break;
+//        }
+//    };
     [_liveView dissmissWindow];
 }
 - (void)enterLive
@@ -140,7 +136,6 @@ static ReplayKitLiveViewModel* _instance = nil;
         self.chatURL = nil;
         return;
     }
-    //UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
     self.chatURL = nil;
     [self didCameraViewTapped:nil];
     if(self.cameraPreview)
@@ -148,7 +143,6 @@ static ReplayKitLiveViewModel* _instance = nil;
         [self.cameraPreview removeFromSuperview];
         self.cameraPreview = nil;
     }
-    //[self.cameraPreview removeFromSuperview];
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
@@ -319,14 +313,27 @@ static ReplayKitLiveViewModel* _instance = nil;
         return ;
     }
     NSAssert(_ownerViewController, @"没有控制器玩不了...");
-    //@WeakObj(self)
     [RPBroadcastActivityViewController loadBroadcastActivityViewControllerWithHandler:^(RPBroadcastActivityViewController * _Nullable broadcastActivityViewController, NSError * _Nullable error)
     {
-        //@StrongObj(self);
         if (!error) {
-            broadcastActivityViewController.delegate = self;
-            broadcastActivityViewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
-            [self.ownerViewController presentViewController:broadcastActivityViewController animated:YES completion:nil];
+            self.activityViewController = broadcastActivityViewController;
+            _activityViewController.delegate = self;
+            _activityViewController.modalPresentationStyle = UIModalPresentationPopover;
+            if ([NSThread isMainThread])
+            {
+//                [self.ownerViewController presentViewController:_activityViewController animated:YES completion:^{
+//                }];
+                [self.ownerViewController.view addSubview:broadcastActivityViewController.view];
+            }
+            else
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    //Update UI in UI thread here
+//                    [self.ownerViewController presentViewController:_activityViewController animated:YES completion:^{
+//                    }];
+                    [self.ownerViewController.view addSubview:broadcastActivityViewController.view];
+                });
+            }
         }
         else {
             [self onStopped:error];
@@ -336,9 +343,18 @@ static ReplayKitLiveViewModel* _instance = nil;
 
 - (void)broadcastActivityViewController:(RPBroadcastActivityViewController *)broadcastActivityViewController didFinishWithBroadcastController:(nullable RPBroadcastController *)broadcastController error:(nullable NSError *)error
 {
-    //@WeakObj(self)
-    [broadcastActivityViewController dismissViewControllerAnimated:YES completion:^{
-        //@StrongObj(self)
+    if ([NSThread isMainThread])
+    {
+        [broadcastActivityViewController.view removeFromSuperview];
+    }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            //Update UI in UI thread here
+            [broadcastActivityViewController.view removeFromSuperview];
+        });
+    }
+    //[broadcastActivityViewController dismissViewControllerAnimated:YES completion:^{
         if (!error) {
             // 如果之前竟然还有一个RPBroadcastController, 先解除上一个对象的代理
             if (self.broadcastController) {
@@ -351,15 +367,13 @@ static ReplayKitLiveViewModel* _instance = nil;
         else {
             [self onStopped:error];
         }
-    }];
+    //}];
 }
 
 - (void)doStartBroadcast {
     NSLog(@"Start broadcast:%@", self.broadcastController);
     self.broadcastController.delegate = self;
-    //@WeakObj(self)
     [self.broadcastController startBroadcastWithHandler:^(NSError * _Nullable error) {
-        //@StrongObj(self);
         if (!error) {
             [self onStarted];
         }
@@ -369,19 +383,17 @@ static ReplayKitLiveViewModel* _instance = nil;
         //[self releaseCheckStartTimer];
     }];
     //[self createCheckStartTimer];
-    //[self start];
 }
 
 //- (void)createCheckStartTimer {
-//    //@WeakObj(self);
-//    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:NO block:^(NSTimer * _Nonnull timer) {
-//        //@StrongObj(self);
+//    _startCheckTimer = [NSTimer scheduledTimerWithTimeInterval:CheckStartTimeout repeats:YES block:^(NSTimer * _Nonnull timer) {
 //        // auto retry
 //        NSLog(@"Start timeout, auto retry...");
-//        [self start];
+//        //[self start];
+//        //[self.ownerViewController presentViewController:_activityViewController animated:YES completion:nil];
 //    }];
 //}
-
+//
 //- (void)releaseCheckStartTimer {
 //    if (_startCheckTimer) {
 //        [_startCheckTimer invalidate];
