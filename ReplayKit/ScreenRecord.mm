@@ -62,19 +62,19 @@ static ScreenRecord* _instance;
     RPScreenRecorder* recorder = [RPScreenRecorder sharedRecorder];
     if (recorder == nil)
     {
-        [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:@"Failed to get Screen Recorder"];
+        [self sendMessage:@"ScreenRecorder_StartRecordingComplete" msg:@"Failed to get Screen Recorder"];
         return;
     }
     [recorder setDelegate:self];
     [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
         if (error == nil)
         {
-            [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:nil];
+            [self sendMessage:@"ScreenRecorder_StartRecordingComplete" msg:nil];
             return;
         }
         else
         {
-            [self sendMessage:@"ScreenRecord_StartRecordingComplete" msg:[error description]];
+            [self sendMessage:@"ScreenRecorder_StartRecordingComplete" msg:[error description]];
         }
     }];
     NSLog(@"startRecording done");
@@ -137,7 +137,7 @@ static ScreenRecord* _instance;
 
 - (BOOL)canPreview
 {
-    return _previewController != nil;
+    return ![self isRecording] && _previewController != nil;
 }
 
 - (void)preview
