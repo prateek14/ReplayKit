@@ -60,6 +60,10 @@ static ReplayKitLiveViewModel* _instance = nil;
                                                      name:UIApplicationDidBecomeActiveNotification
                                                    object:[UIApplication sharedApplication]];
         [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(checkNeedResumeLiving)
+                                                     name:UIApplicationDidBecomeActiveNotification
+                                                   object:[UIApplication sharedApplication]];
+        [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(checkLivingStatus)
                                                      name:UIApplicationWillEnterForegroundNotification
                                                    object:[UIApplication sharedApplication]];
@@ -93,48 +97,76 @@ static ReplayKitLiveViewModel* _instance = nil;
     };
     
 }
+- (void)enterLive
+{
+    UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
+    //            if (self.cameraPreview != cameraView) {
+    //                if (self.cameraPreview.superview) {
+    //                    [self.cameraPreview removeFromSuperview];
+    //                }
+    //                NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
+    //                self.cameraPreview = cameraView;
+    if(cameraView)
+    {
+        if (cameraView.superview) {
+            [cameraView removeFromSuperview];
+        }
+        // If the camera is enabled, create the camera preview and add it to the game's UIView
+        cameraView.frame = CGRectMake(0, 0, 200, 200);
+        [self.ownerViewController.view addSubview:cameraView];
+        {
+            // Add a gesture recognizer so the user can drag the camera around the screen
+            UIPanGestureRecognizer *pgr = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewPanned:)];
+            pgr.minimumNumberOfTouches = 1;
+            pgr.maximumNumberOfTouches = 1;
+            [cameraView addGestureRecognizer:pgr];
+        }
+        {
+            UITapGestureRecognizer *tgr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewTapped:)];
+            [cameraView addGestureRecognizer:tgr];
+        }
+    }
+    //            }
+}
+- (void)exitLive
+{
+    UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
+    self.chatURL = nil;
+    [self didCameraViewTapped:nil];
+    if(cameraView)
+        [cameraView removeFromSuperview];
+    //[self.cameraPreview removeFromSuperview];
+    //self.cameraPreview = nil;
+}
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if([keyPath isEqualToString:@"living"])
     {
-        if (self.isLiving) {
-            UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
-//            if (self.cameraPreview != cameraView) {
-//                if (self.cameraPreview.superview) {
-//                    [self.cameraPreview removeFromSuperview];
-//                }
-//                NSLog(@"Camera view frame:%@", NSStringFromCGRect(cameraView.frame));
-//                self.cameraPreview = cameraView;
-                if(cameraView)
-                {
-                    if (cameraView.superview) {
-                        [cameraView removeFromSuperview];
-                    }
-                    // If the camera is enabled, create the camera preview and add it to the game's UIView
-                    cameraView.frame = CGRectMake(0, 0, 200, 200);
-                    [self.ownerViewController.view addSubview:cameraView];
-                    {
-                        // Add a gesture recognizer so the user can drag the camera around the screen
-                        UIPanGestureRecognizer *pgr = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewPanned:)];
-                        pgr.minimumNumberOfTouches = 1;
-                        pgr.maximumNumberOfTouches = 1;
-                        [cameraView addGestureRecognizer:pgr];
-                    }
-                    {
-                        UITapGestureRecognizer *tgr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didCameraViewTapped:)];
-                        [cameraView addGestureRecognizer:tgr];
-                    }
-                }
-//            }
+        if ([NSThread isMainThread])
+        {
+            if (self.isLiving)
+            {
+                [self enterLive];
+            }
+            else
+            {
+                [self exitLive];
+            }
         }
-        else {
-            UIView* cameraView = [RPScreenRecorder sharedRecorder].cameraPreviewView;
-            self.chatURL = nil;
-            [self didCameraViewTapped:nil];
-            if(cameraView)
-                [cameraView removeFromSuperview];
-            //[self.cameraPreview removeFromSuperview];
-            //self.cameraPreview = nil;
+        else
+        {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                //Update UI in UI thread here
+                if (self.isLiving)
+                {
+                    [self enterLive];
+                }
+                else
+                {
+                    [self exitLive];
+                }
+                
+            });
         }
     }
 }
@@ -334,7 +366,24 @@ static ReplayKitLiveViewModel* _instance = nil;
         self.paused = isPaused;
     }
 }
-
+- (void) checkNeedResumeLiving {
+    BOOL isLiving = self.broadcastController.isBroadcasting;
+    if (isLiving && self.isPaused) {
+        UIAlertController *ask = [[UIAlertController alloc] init];
+        ask.title = @"恢复直播";
+        ask.message = @"直播已经暂停了，是否立刻恢复直播？";
+        
+        UIAlertAction *yes = [UIAlertAction actionWithTitle:@"恢复" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [self resume];
+        }];
+        UIAlertAction *no = [UIAlertAction actionWithTitle:@"不恢复" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            [ask dismissViewControllerAnimated:YES completion:nil];
+        }];
+        [ask addAction:yes];
+        [ask addAction:no];
+        [self.ownerViewController presentViewController:ask animated:YES completion:nil];
+    }
+}
 // 一些私有协议
 // updateServiceInfo的格式是一个固定的字典
 // 通过RPInfo_EventKey得到通知的类型

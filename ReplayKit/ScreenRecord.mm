@@ -146,6 +146,7 @@ static ScreenRecord* _instance;
     {
         return;
     }
+    //_previewController.mode = RPPreviewViewControllerModePreview;
     [_previewController setModalPresentationStyle:UIModalPresentationFullScreen];
     [[[UnityGetGLView() window] rootViewController] presentViewController:_previewController animated:YES completion:^()
     {
