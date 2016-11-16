@@ -57,7 +57,11 @@ static ScreenRecord* _instance;
                      MakeStringCopy([msg UTF8String]));
 }
 
-- (void)startRecording
+- (BOOL)available
+{
+    return [RPScreenRecorder sharedRecorder].available;
+}
+- (void)startRecording:(bool)enableMicrophone
 {
     RPScreenRecorder* recorder = [RPScreenRecorder sharedRecorder];
     if (recorder == nil)
@@ -66,7 +70,7 @@ static ScreenRecord* _instance;
         return;
     }
     [recorder setDelegate:self];
-    [recorder startRecordingWithMicrophoneEnabled:YES handler:^(NSError * _Nullable error) {
+    [recorder startRecordingWithMicrophoneEnabled:enableMicrophone handler:^(NSError * _Nullable error) {
         if (error == nil)
         {
             [self sendMessage:@"ScreenRecorder_StartRecordingComplete" msg:nil];
@@ -174,9 +178,13 @@ static ScreenRecord* _instance;
 
 extern "C"
 {
-    void screenRecord_startRecord()
+    bool screenRecord_isAvailable()
     {
-        [[ScreenRecord Instance] startRecording];
+        return [[ScreenRecord Instance] available] == YES;
+    }
+    void screenRecord_startRecord(bool enableMicrophone)
+    {
+        [[ScreenRecord Instance] startRecording:enableMicrophone];
     }
     void screenRecord_stopRecord()
     {
@@ -186,16 +194,15 @@ extern "C"
     {
         [[ScreenRecord Instance] discardRecording];
     }
-    
     bool screenRecord_isRecording()
     {
         return [[ScreenRecord Instance] isRecording] == YES;
     }
-    bool screenRecord_CanPreview()
+    bool screenRecord_canPreview()
     {
         return [[ScreenRecord Instance] canPreview] == YES;
     }
-    void screenRecord_Preview()
+    void screenRecord_preview()
     {
         [[ScreenRecord Instance] preview];
     }

@@ -3,7 +3,7 @@
 @interface ScreenRecord : NSObject<RPScreenRecorderDelegate, RPPreviewViewControllerDelegate>
 
 + (nullable instancetype)Instance;
-- (void)startRecording;
+- (void)startRecording:(bool)enableMicrophone;
 - (void)stopRecording;
 - (void)discardRecording;
 - (BOOL)isRecording;
